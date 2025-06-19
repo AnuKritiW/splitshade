@@ -9,13 +9,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "naive-ui": "^2.42.0",
+    "@fontsource/lato": "^5.2.6",
     "vue": "^3.5.13"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.3",
     "@vue/tsconfig": "^0.7.0",
+    "naive-ui": "^2.42.0",
     "typescript": "~5.8.3",
+    "vfonts": "^0.0.3",
     "vite": "^6.3.5",
     "vue-tsc": "^2.2.8"
   }

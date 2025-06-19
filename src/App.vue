@@ -1,61 +1,45 @@
-<template>
-  <div id="layout">
-    <div id="editor">Editor goes here</div>
+<script setup lang="ts">
+import { darkTheme } from 'naive-ui'
+</script>
 
-    <div id="right-panel">
-      <canvas id="gfx"></canvas>
-      <div id="console">Console output</div>
-    </div>
-  </div>
+<template>
+  <n-config-provider :theme="darkTheme">
+    <n-layout style="height: 100vh">
+      <n-layout-header bordered style="padding: 12px;">
+        <h2 style="margin: 0; color: white">SplitShade: WebGPU Playground</h2>
+      </n-layout-header>
+
+      <n-layout has-sider>
+        <n-layout-sider width="50%" bordered content-style="padding: 12px;">
+          <n-card title="Editor" size="small">Editor goes here</n-card>
+        </n-layout-sider>
+
+        <n-layout>
+          <n-layout-content content-style="padding: 12px; height: 75%;">
+            <n-card title="Preview" size="small">
+              <canvas id="gfx" style="width: 100%; height: 100%;"></canvas>
+            </n-card>
+          </n-layout-content>
+
+          <n-layout-footer style="padding: 12px; height: 25%;">
+            <n-card title="Console" size="small">Console output</n-card>
+          </n-layout-footer>
+        </n-layout>
+      </n-layout>
+    </n-layout>
+  </n-config-provider>
 </template>
 
 <style>
-#app {
+html, body {
   margin: 0;
   padding: 0;
-  max-width: none;
-  text-align: left;
-}
-</style>
-
-
-<style scoped>
-#layout {
-  display: flex;
-  height: 100vh;
-  width: 100vw;
-  background: #0e0e0e;
-  color: white;
-  font-family: sans-serif;
-}
-
-#editor {
-  width: 50%;
   height: 100%;
-  background: #1e1e1e;
-  padding: 1rem;
-  overflow: auto;
+  overflow: hidden;
 }
 
-#right-panel {
-  width: 50%;
-  display: flex;
-  flex-direction: column;
-}
-
-#gfx {
-  flex: 3;
-  width: 100%;
-  background: #111;
-}
-
-#console {
-  flex: 1;
-  padding: 0.5rem;
-  background: #202020;
-  color: #ddd;
-  font-family: monospace;
-  font-size: 0.85rem;
-  overflow-y: auto;
+.n-layout-sider,
+.n-layout-footer {
+  background-color: #101014;
 }
 </style>
