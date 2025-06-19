@@ -1,30 +1,61 @@
-<script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
-</script>
-
 <template>
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
+  <div id="layout">
+    <div id="editor">Editor goes here</div>
+
+    <div id="right-panel">
+      <canvas id="gfx"></canvas>
+      <div id="console">Console output</div>
+    </div>
   </div>
-  <HelloWorld msg="Vite + Vue" />
 </template>
 
+<style>
+#app {
+  margin: 0;
+  padding: 0;
+  max-width: none;
+  text-align: left;
+}
+</style>
+
+
 <style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+#layout {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  background: #0e0e0e;
+  color: white;
+  font-family: sans-serif;
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+
+#editor {
+  width: 50%;
+  height: 100%;
+  background: #1e1e1e;
+  padding: 1rem;
+  overflow: auto;
 }
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
+
+#right-panel {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+}
+
+#gfx {
+  flex: 3;
+  width: 100%;
+  background: #111;
+}
+
+#console {
+  flex: 1;
+  padding: 0.5rem;
+  background: #202020;
+  color: #ddd;
+  font-family: monospace;
+  font-size: 0.85rem;
+  overflow-y: auto;
 }
 </style>
