@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { darkTheme } from 'naive-ui'
+import { ref } from 'vue'
+import { VueMonacoEditor } from '@guolao/vue-monaco-editor'
+const code = ref(`// Write your WGSL code here`)
 </script>
 
 <template>
@@ -11,7 +14,14 @@ import { darkTheme } from 'naive-ui'
 
       <n-layout has-sider>
         <n-layout-sider width="50%" bordered content-style="padding: 12px;">
-          <n-card title="Editor" size="small">Editor goes here</n-card>
+          <n-card title="Editor" size="small">
+            <VueMonacoEditor
+              language="wgsl"
+              theme="vs-dark"
+              v-model="code"
+              height="400"
+            />
+          </n-card>
         </n-layout-sider>
 
         <n-layout>
