@@ -46,7 +46,7 @@ html, body {
 .grid-container {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
+  grid-template-rows: 3fr 1fr;
   height: 100%;
   gap: 12px;
   padding: 12px;
