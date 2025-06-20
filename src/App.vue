@@ -7,7 +7,7 @@ const code = ref(`// Write your WGSL code here`)
 
 <template>
   <n-config-provider :theme="darkTheme">
-    <n-layout style="height: 100vh">
+    <div class="root-grid">
       <n-layout-header bordered style="padding: 12px;">
         <h2 style="margin: 0; color: white">SplitShade: WebGPU Playground</h2>
       </n-layout-header>
@@ -18,7 +18,7 @@ const code = ref(`// Write your WGSL code here`)
             language="wgsl"
             theme="vs-dark"
             v-model="code"
-            height="100%"
+            style="height: 100%; width: 100%;"
           />
         </n-card>
 
@@ -29,25 +29,31 @@ const code = ref(`// Write your WGSL code here`)
         <n-card title="Console" size="small" class="panel">
           Console output
         </n-card>
+
       </div>
-    </n-layout>
+    </div>
   </n-config-provider>
 </template>
 
-
 <style>
-html, body {
+html, body, #app, .n-layout {
   margin: 0;
   padding: 0;
   height: 100%;
   overflow: hidden;
 }
 
+/* Root grid with two rows: header + panels */
+.root-grid {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100vh;
+}
+
 .grid-container {
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 3fr 1fr;
-  height: 100%;
   gap: 12px;
   padding: 12px;
   background-color: #101014;
@@ -56,6 +62,7 @@ html, body {
 
 .panel {
   background-color: #1a1a1a;
+  height: 100%;
   overflow: hidden;
 }
 
