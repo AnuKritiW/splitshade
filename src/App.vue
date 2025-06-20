@@ -12,33 +12,28 @@ const code = ref(`// Write your WGSL code here`)
         <h2 style="margin: 0; color: white">SplitShade: WebGPU Playground</h2>
       </n-layout-header>
 
-      <n-layout has-sider>
-        <n-layout-sider width="50%" bordered content-style="padding: 12px;">
-          <n-card title="Editor" size="small">
-            <VueMonacoEditor
-              language="wgsl"
-              theme="vs-dark"
-              v-model="code"
-              height="400"
-            />
-          </n-card>
-        </n-layout-sider>
+      <div class="grid-container">
+        <n-card title="Editor" size="small" class="panel editor">
+          <VueMonacoEditor
+            language="wgsl"
+            theme="vs-dark"
+            v-model="code"
+            height="100%"
+          />
+        </n-card>
 
-        <n-layout>
-          <n-layout-content content-style="padding: 12px; height: 75%;">
-            <n-card title="Preview" size="small">
-              <canvas id="gfx" style="width: 100%; height: 100%;"></canvas>
-            </n-card>
-          </n-layout-content>
+        <n-card title="Preview" size="small" class="panel">
+          <canvas id="gfx" style="width: 100%; height: 100%;"></canvas>
+        </n-card>
 
-          <n-layout-footer style="padding: 12px; height: 25%;">
-            <n-card title="Console" size="small">Console output</n-card>
-          </n-layout-footer>
-        </n-layout>
-      </n-layout>
+        <n-card title="Console" size="small" class="panel">
+          Console output
+        </n-card>
+      </div>
     </n-layout>
   </n-config-provider>
 </template>
+
 
 <style>
 html, body {
@@ -48,8 +43,24 @@ html, body {
   overflow: hidden;
 }
 
-.n-layout-sider,
-.n-layout-footer {
+.grid-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  height: 100%;
+  gap: 12px;
+  padding: 12px;
   background-color: #101014;
+  box-sizing: border-box;
 }
+
+.panel {
+  background-color: #1a1a1a;
+  overflow: hidden;
+}
+
+.editor {
+  grid-row: 1 / span 2; /* Span both rows */
+}
+
 </style>
