@@ -3,6 +3,15 @@ import { darkTheme } from 'naive-ui'
 import { ref } from 'vue'
 import { VueMonacoEditor } from '@guolao/vue-monaco-editor'
 const code = ref(`// Write your WGSL code here`)
+
+import { onMounted } from 'vue'
+import { initWebGPU } from './renderer'
+
+onMounted(() => {
+  const canvas = document.getElementById("gfx") as HTMLCanvasElement
+  initWebGPU(canvas).catch(err => console.error(err))
+})
+
 </script>
 
 <template>
