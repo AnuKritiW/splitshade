@@ -1,3 +1,5 @@
+import redTriangleWGSL from './shaders/redTriangle.wgsl?raw';
+
 export async function initWebGPU(canvas: HTMLCanvasElement) {
   console.log("Initializing WebGPU...");
 
@@ -24,6 +26,26 @@ export async function initWebGPU(canvas: HTMLCanvasElement) {
     alphaMode: "opaque",
   });
 
+  const shaderModule = device.createShaderModule({
+    code: redTriangleWGSL,
+  });
+
+  const pipeline = device.createRenderPipeline({
+    layout: "auto",
+    vertex: {
+      module: shaderModule,
+      entryPoint: "vs_main",
+    },
+    fragment: {
+      module: shaderModule,
+      entryPoint: "fs_main",
+      targets: [{ format }],
+    },
+    primitive: {
+      topology: "triangle-list",
+    },
+  });
+
   const encoder = device.createCommandEncoder();
   const pass = encoder.beginRenderPass({
     colorAttachments: [{
@@ -33,6 +55,9 @@ export async function initWebGPU(canvas: HTMLCanvasElement) {
       storeOp: "store",
     }],
   });
+
+  pass.setPipeline(pipeline);
+  pass.draw(3); // 3 verts to make 1 triangle
   pass.end();
 
   device.queue.submit([encoder.finish()]);
