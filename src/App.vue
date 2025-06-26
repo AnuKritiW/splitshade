@@ -6,6 +6,13 @@ const code = ref(`// Write your WGSL code here`)
 import { onMounted } from 'vue'
 import { initWebGPU } from './renderer'
 
+import { VueMonacoEditor, loader } from '@guolao/vue-monaco-editor'
+loader.config({
+  paths: {
+    vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs',
+  },
+})
+
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 function runShader() {
   if (canvasRef.value) {
