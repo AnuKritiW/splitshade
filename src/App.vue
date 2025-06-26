@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import { darkTheme } from 'naive-ui'
 import { ref } from 'vue'
-import { VueMonacoEditor } from '@guolao/vue-monaco-editor'
 const code = ref(`// Write your WGSL code here`)
 
 import { onMounted } from 'vue'
 import { initWebGPU } from './renderer'
 
-onMounted(() => {
-  const canvas = document.getElementById("gfx") as HTMLCanvasElement
-  initWebGPU(canvas).catch(err => console.error(err))
-})
+const canvasRef = ref<HTMLCanvasElement | null>(null)
+function runShader() {
+  if (canvasRef.value) {
+    console.log("WGSL code from editor:\n", code.value);
+    initWebGPU(canvasRef.value, code.value)
+  }
+}
 
 </script>
 
@@ -26,13 +28,16 @@ onMounted(() => {
           <VueMonacoEditor
             language="wgsl"
             theme="vs-dark"
-            v-model="code"
+            v-model:value="code"
             style="height: 100%; width: 100%;"
           />
+          <template #footer>
+            <n-button @click="runShader" block>Run Shader</n-button>
+          </template>
         </n-card>
 
         <n-card title="Preview" size="small" class="panel">
-          <canvas id="gfx" style="width: 100%; height: 100%;"></canvas>
+          <canvas ref="canvasRef" id="gfx" style="width: 100%; height: 100%;"></canvas>
         </n-card>
 
         <n-card title="Console" size="small" class="panel">

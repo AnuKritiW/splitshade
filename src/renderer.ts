@@ -1,6 +1,6 @@
 import redTriangleWGSL from './shaders/redTriangle.wgsl?raw';
 
-export async function initWebGPU(canvas: HTMLCanvasElement) {
+export async function initWebGPU(canvas: HTMLCanvasElement, shaderCode: string) {
   console.log("Initializing WebGPU...");
 
   if (!navigator.gpu) {
@@ -27,7 +27,7 @@ export async function initWebGPU(canvas: HTMLCanvasElement) {
   });
 
   const shaderModule = device.createShaderModule({
-    code: redTriangleWGSL,
+    code: shaderCode,
   });
 
   const pipeline = device.createRenderPipeline({
