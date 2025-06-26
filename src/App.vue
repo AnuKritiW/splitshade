@@ -14,10 +14,13 @@ loader.config({
 })
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
+const consoleOutput = ref("")
 function runShader() {
   if (canvasRef.value) {
-    console.log("WGSL code from editor:\n", code.value);
-    initWebGPU(canvasRef.value, code.value)
+    consoleOutput.value = "Compiled successfully, running shader..."
+    initWebGPU(canvasRef.value, code.value, (msg) => {
+      consoleOutput.value = msg || "Compiled successfully"
+    })
   }
 }
 
@@ -48,7 +51,9 @@ function runShader() {
         </n-card>
 
         <n-card title="Console" size="small" class="panel">
-          Console output
+          <div style="height: 100%; overflow-y: auto; white-space: pre-wrap; color: #ccc; font-family: monospace; padding: 8px;">
+            {{ consoleOutput }}
+          </div>
         </n-card>
 
       </div>

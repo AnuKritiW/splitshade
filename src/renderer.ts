@@ -1,6 +1,10 @@
 import redTriangleWGSL from './shaders/redTriangle.wgsl?raw';
 
-export async function initWebGPU(canvas: HTMLCanvasElement, shaderCode: string) {
+export async function initWebGPU(
+  canvas: HTMLCanvasElement,
+  shaderCode: string,
+  onConsoleOutput?: (msg: string) => void
+) {
   console.log("Initializing WebGPU...");
 
   if (!navigator.gpu) {
@@ -15,6 +19,10 @@ export async function initWebGPU(canvas: HTMLCanvasElement, shaderCode: string) 
   }
 
   const device = await adapter.requestDevice();
+  if (!device) {
+    console.error("Failed to get GPU device");
+    return;
+  }
   console.log("Got GPU device:", device);
 
   const context = canvas.getContext("webgpu") as GPUCanvasContext;
@@ -29,6 +37,17 @@ export async function initWebGPU(canvas: HTMLCanvasElement, shaderCode: string) 
   const shaderModule = device.createShaderModule({
     code: shaderCode,
   });
+
+  // Get diagnostic info
+  const info = await shaderModule.getCompilationInfo();
+  if (info.messages.length > 0) {
+    const formatted = info.messages.map(m => {
+      const where = `L${m.lineNum}:${m.linePos}`;
+      return `[${m.type}] ${where} ${m.message}`;
+    }).join("\n");
+    onConsoleOutput?.(formatted);
+    if (info.messages.some(m => m.type === "error")) return; // Abort if errors
+  }
 
   const pipeline = device.createRenderPipeline({
     layout: "auto",
