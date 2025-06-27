@@ -97,14 +97,24 @@ html, body, #app, .n-layout {
   grid-row: 1 / span 2; /* Span both rows */
 }
 
-/* Make only the inner console content scroll */
-.panel-console > .console-content {
-  flex: 1;
-  overflow-y: auto;
-  white-space: pre-wrap;
-  color: #ccc;
-  padding: 8px;
-  font-family: monospace;
+.panel-console {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
+
+.panel-console .n-card__content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.panel-console .console-content {
+  flex: 1;
+  overflow-y: auto;  /* scroll when it overflows */
+  padding-bottom: 16px;
+}
+
 
 </style>
