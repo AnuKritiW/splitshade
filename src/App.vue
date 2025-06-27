@@ -50,8 +50,8 @@ function runShader() {
           <canvas ref="canvasRef" id="gfx" style="width: 100%; height: 100%;"></canvas>
         </n-card>
 
-        <n-card title="Console" size="small" class="panel">
-          <div style="height: 100%; overflow-y: auto; white-space: pre-wrap; color: #ccc; font-family: monospace; padding: 8px;">
+        <n-card title="Console" size="small" class="panel panel-console">
+          <div class="console-content" style="font-family: monospace; color: #ccc; white-space: pre-wrap; padding:8px; overflow-y:auto; flex:1;">
             {{ consoleOutput }}
           </div>
         </n-card>
@@ -66,13 +66,12 @@ html, body, #app, .n-layout {
   margin: 0;
   padding: 0;
   height: 100%;
-  overflow: hidden;
 }
 
 /* Root grid with two rows: header + panels */
 .root-grid {
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto minmax(0, 1fr);
   height: 100vh;
 }
 
@@ -84,16 +83,28 @@ html, body, #app, .n-layout {
   padding: 12px;
   background-color: #101014;
   box-sizing: border-box;
+  height: 100%; /* fill the minmax row */
 }
 
 .panel {
   background-color: #1a1a1a;
+  display: flex;
+  flex-direction: column;
   height: 100%;
-  overflow: hidden;
 }
 
 .editor {
   grid-row: 1 / span 2; /* Span both rows */
+}
+
+/* Make only the inner console content scroll */
+.panel-console > .console-content {
+  flex: 1;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  color: #ccc;
+  padding: 8px;
+  font-family: monospace;
 }
 
 </style>
