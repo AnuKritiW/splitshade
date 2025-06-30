@@ -17,9 +17,10 @@ const canvasRef = ref<HTMLCanvasElement | null>(null)
 const consoleOutput = ref("")
 function runShader() {
   if (canvasRef.value) {
-    consoleOutput.value = "Compiled successfully, running shader..."
+    // consoleOutput.value = "Compiled successfully, running shader..."
+    consoleOutput.value = ""
     initWebGPU(canvasRef.value, code.value, (msg) => {
-      consoleOutput.value = msg || "Compiled successfully"
+      consoleOutput.value += (msg || "Compiled successfully") + '\n'
     })
   }
 }

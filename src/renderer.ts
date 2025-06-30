@@ -1,3 +1,5 @@
+import { parseWGSL } from './webgpu/parser';
+
 export async function initWebGPU(
   canvas: HTMLCanvasElement,
   shaderCode: string,
@@ -6,8 +8,8 @@ export async function initWebGPU(
   console.log("Initializing WebGPU...");
 
   const output = (msg: string) => {
-    if (onConsoleOutput) onConsoleOutput(msg)
-    else console.log(msg)
+    if (onConsoleOutput) onConsoleOutput(msg) // log to browser console
+    console.log(msg)                          // always log to inspect console
   }
 
   try {
@@ -43,6 +45,13 @@ export async function initWebGPU(
       alphaMode: "opaque",
     });
 
+    const parsedCode = parseWGSL(shaderCode);
+    console.log(`Detected shader type: ${parsedCode.type}`);
+    if (parsedCode.type === 'error') {
+      output(`Shader parsedCode error: ${parsedCode.error}`);
+      return;
+    }
+
     const shaderModule = device.createShaderModule({
       code: shaderCode,
     });
@@ -58,35 +67,57 @@ export async function initWebGPU(
       if (info.messages.some(m => m.type === "error")) return; // Abort if errors
     }
 
-    const pipeline = device.createRenderPipeline({
-      layout: "auto",
-      vertex: {
-        module: shaderModule,
-        entryPoint: "vs_main",
-      },
-      fragment: {
-        module: shaderModule,
-        entryPoint: "fs_main",
-        targets: [{ format }],
-      },
-      primitive: {
-        topology: "triangle-list",
-      },
-    });
-
     const encoder = device.createCommandEncoder();
-    const pass = encoder.beginRenderPass({
-      colorAttachments: [{
-        view: context.getCurrentTexture().createView(),
-        clearValue: { r: 0.1, g: 0.1, b: 0.1, a: 1.0 },
-        loadOp: "clear",
-        storeOp: "store",
-      }],
-    });
+    if (parsedCode.type === 'render') {
+      const pipeline = device.createRenderPipeline({
+        layout: "auto",
+        vertex: {
+          module: shaderModule,
+          entryPoint: parsedCode.entryPoints.vertex[0].name,
+        },
+        fragment: {
+          module: shaderModule,
+          entryPoint: parsedCode.entryPoints.fragment[0].name,
+          targets: [{ format }],
+        },
+        primitive: {
+          topology: "triangle-list",
+        },
+      });
 
-    pass.setPipeline(pipeline);
-    pass.draw(3); // 3 verts to make 1 triangle
-    pass.end();
+      const pass = encoder.beginRenderPass({
+        colorAttachments: [{
+          view: context.getCurrentTexture().createView(),
+          clearValue: { r: 0.1, g: 0.1, b: 0.1, a: 1.0 },
+          loadOp: "clear",
+          storeOp: "store",
+        }],
+      });
+
+      pass.setPipeline(pipeline);
+      pass.draw(3); // 3 verts to make 1 triangle
+      pass.end();
+    }
+    else if (parsedCode.type === 'compute') {
+      const entryPoint = parsedCode.entryPoints[0].name;
+      // const workgroupSize = parsedCode.entryPoints[0].workgroup_size || [1, 1, 1];
+
+      const pipeline = device.createComputePipeline({
+        layout: "auto",
+        compute: {
+          module: shaderModule,
+          entryPoint,
+        }
+      });
+
+      const pass = encoder.beginComputePass();
+      pass.setPipeline(pipeline);
+      pass.dispatchWorkgroups(1, 1, 1); // Later: match canvas/grid size
+      pass.end();
+    } else {
+      output(`Unsupported shader type: ${parsedCode.type}. No pipeline created.`);
+      return;
+    }
 
     device.queue.submit([encoder.finish()]);
 
