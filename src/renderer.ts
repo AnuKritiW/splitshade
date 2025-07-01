@@ -1,5 +1,19 @@
 import { parseWGSL } from './webgpu/parser';
 
+const fullscreenVertexWGSL = `
+@vertex
+fn main(@builtin(vertex_index) vertexIndex : u32) -> @builtin(position) vec4<f32> {
+  var pos = array<vec2<f32>, 3>(
+    vec2<f32>(-1.0, -3.0),
+    vec2<f32>(3.0, 1.0),
+    vec2<f32>(-1.0, 1.0)
+  );
+  return vec4<f32>(pos[vertexIndex], 0.0, 1.0);
+}
+`;
+
+// TODO: clean up
+// TODO: check where we are logging direct to console versus output()
 export async function initWebGPU(
   canvas: HTMLCanvasElement,
   shaderCode: string,
@@ -8,9 +22,9 @@ export async function initWebGPU(
   console.log("Initializing WebGPU...");
 
   const output = (msg: string) => {
-    if (onConsoleOutput) onConsoleOutput(msg) // log to browser console
-    console.log(msg)                          // always log to inspect console
-  }
+    if (onConsoleOutput) onConsoleOutput(msg); // log to browser console
+    console.log(msg);                          // always log to inspect console
+  };
 
   try {
     if (!navigator.gpu) {
@@ -31,11 +45,6 @@ export async function initWebGPU(
     }
     console.log("Got GPU device:", device);
 
-    // catch any validation errors that happen in this scope
-    // this is useful for catching shader compilation errors
-    // collect them to check later with popErrorScope()
-    device.pushErrorScope('validation');
-
     const context = canvas.getContext("webgpu") as GPUCanvasContext;
     const format = navigator.gpu.getPreferredCanvasFormat();
 
@@ -46,18 +55,28 @@ export async function initWebGPU(
     });
 
     const parsedCode = parseWGSL(shaderCode);
-    console.log(`Detected shader type: ${parsedCode.type}`);
-    if (parsedCode.type === 'error') {
-      output(`Shader parsedCode error: ${parsedCode.error}`);
+    output(`Detected shader type: ${parsedCode.type}`);
+
+    if (!parsedCode.valid) {
+      // log the most relevant error message
+      output(parsedCode.message || parsedCode.error || 'Invalid shader.');
       return;
     }
 
-    const shaderModule = device.createShaderModule({
+    if (parsedCode.warnings?.length) {
+      parsedCode.warnings.forEach(output);
+    }
+
+    // Compile fragment and hardcoded vertex shader
+    const vertexModule = device.createShaderModule({
+      code: fullscreenVertexWGSL,
+    });
+    const fragmentModule = device.createShaderModule({
       code: shaderCode,
     });
 
     // Get diagnostic info
-    const info = await shaderModule.getCompilationInfo();
+    const info = await fragmentModule.getCompilationInfo();
     if (info.messages.length > 0) {
       const formatted = info.messages.map(m => {
         const where = `L${m.lineNum}:${m.linePos}`;
@@ -67,69 +86,54 @@ export async function initWebGPU(
       if (info.messages.some(m => m.type === "error")) return; // Abort if errors
     }
 
+    // catch any validation errors that happen in this scope
+    // this is useful for catching shader compilation errors
+    // collect them to check later with popErrorScope()
+    device.pushErrorScope('validation');
+
+    // Create render pipeline using fullscreen triangle
+    const pipeline = device.createRenderPipeline({
+      layout: "auto",
+      vertex: {
+        module: vertexModule,
+        entryPoint: "main",
+      },
+      fragment: {
+        module: fragmentModule,
+        entryPoint: parsedCode.entryPoints[0].name,
+        targets: [{ format }],
+      },
+      primitive: {
+        topology: "triangle-list",
+      },
+    });
+
+    // Encode commands
     const encoder = device.createCommandEncoder();
-    if (parsedCode.type === 'render') {
-      const pipeline = device.createRenderPipeline({
-        layout: "auto",
-        vertex: {
-          module: shaderModule,
-          entryPoint: parsedCode.entryPoints.vertex[0].name,
-        },
-        fragment: {
-          module: shaderModule,
-          entryPoint: parsedCode.entryPoints.fragment[0].name,
-          targets: [{ format }],
-        },
-        primitive: {
-          topology: "triangle-list",
-        },
-      });
+    const pass = encoder.beginRenderPass({
+      colorAttachments: [{
+        view: context.getCurrentTexture().createView(),
+        clearValue: { r: 0.1, g: 0.1, b: 0.1, a: 1.0 },
+        loadOp: "clear",
+        storeOp: "store",
+      }],
+    });
 
-      const pass = encoder.beginRenderPass({
-        colorAttachments: [{
-          view: context.getCurrentTexture().createView(),
-          clearValue: { r: 0.1, g: 0.1, b: 0.1, a: 1.0 },
-          loadOp: "clear",
-          storeOp: "store",
-        }],
-      });
-
-      pass.setPipeline(pipeline);
-      pass.draw(3); // 3 verts to make 1 triangle
-      pass.end();
-    }
-    else if (parsedCode.type === 'compute') {
-      const entryPoint = parsedCode.entryPoints[0].name;
-      // const workgroupSize = parsedCode.entryPoints[0].workgroup_size || [1, 1, 1];
-
-      const pipeline = device.createComputePipeline({
-        layout: "auto",
-        compute: {
-          module: shaderModule,
-          entryPoint,
-        }
-      });
-
-      const pass = encoder.beginComputePass();
-      pass.setPipeline(pipeline);
-      pass.dispatchWorkgroups(1, 1, 1); // Later: match canvas/grid size
-      pass.end();
-    } else {
-      output(`Unsupported shader type: ${parsedCode.type}. No pipeline created.`);
-      return;
-    }
+    pass.setPipeline(pipeline);
+    pass.draw(3); // Fullscreen triangle
+    pass.end();
 
     device.queue.submit([encoder.finish()]);
 
     // Pop error scope
     const error = await device.popErrorScope();
     if (error) {
-      output(`WebGPU Error: ${error.message}`)
+      output(`WebGPU Error: ${error.message}`);
     } else {
-      output(`Shader compiled and executed successfully.`)
+      output(`Shader compiled and executed successfully.`);
     }
-    // console.log("Submitted WebGPU draw call");
+
   } catch (err: any) {
-    output(`Caught Exception: ${err.message || err}`)
+    output(`Caught Exception: ${err.message || err}`);
   }
 }
