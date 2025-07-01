@@ -66,11 +66,12 @@ function createFullscreenPipeline(
   vertexModule: GPUShaderModule,
   fragmentModule: GPUShaderModule,
   fragmentEntryPoint: string,
-  format: GPUTextureFormat
+  format: GPUTextureFormat,
+  layout: GPUPipelineLayout
 ) {
   // Create render pipeline using fullscreen triangle
   return device.createRenderPipeline({
-    layout: "auto",
+    layout,
     vertex: {
       module: vertexModule,
       entryPoint: "main",
@@ -89,7 +90,8 @@ function createFullscreenPipeline(
 function runRenderPass(
   device: GPUDevice,
   context: GPUCanvasContext,
-  pipeline: GPURenderPipeline
+  pipeline: GPURenderPipeline,
+  bindGroup: GPUBindGroup
 ) {
   // Encode commands
   const encoder = device.createCommandEncoder();
@@ -103,10 +105,49 @@ function runRenderPass(
   });
 
   pass.setPipeline(pipeline);
+  pass.setBindGroup(0, bindGroup); // injects iResolution uniform
   pass.draw(3); // Fullscreen triangle
   pass.end();
 
   device.queue.submit([encoder.finish()]);
+}
+
+function createResolutionUniform(device: GPUDevice, canvas: HTMLCanvasElement)
+{
+  const resolutionData = new Float32Array([
+    canvas.width,
+    canvas.height,
+    1.0,
+  ]);
+
+  const buffer = device.createBuffer({
+    size: resolutionData.byteLength,
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+  });
+
+  device.queue.writeBuffer(buffer, 0, resolutionData);
+
+  const bindGroupLayout = device.createBindGroupLayout({
+    entries: [
+      {
+        binding: 0,
+        visibility: GPUShaderStage.FRAGMENT,
+        buffer: { type: "uniform" },
+      },
+    ],
+  });
+
+  const bindGroup = device.createBindGroup({
+    layout: bindGroupLayout,
+    entries: [
+      {
+        binding: 0,
+        resource: { buffer },
+      },
+    ],
+  });
+
+  return { bindGroupLayout, bindGroup };
 }
 
 // TODO: check where we are logging direct to console versus output()
@@ -148,13 +189,19 @@ export async function initWebGPU(
     const fragmentModule = await compileShaderModule(device, shaderCode, output);
     if (!fragmentModule) return;
 
+    // Create iResolution uniform (vec3<f32>: width, height, 1.0)
+    const { bindGroupLayout, bindGroup } = createResolutionUniform(device, canvas);
+
     // catch any validation errors that happen in this scope
     // this is useful for catching shader compilation errors
     // collect them to check later with popErrorScope()
     device.pushErrorScope('validation');
 
-    const pipeline = createFullscreenPipeline(device, vertexModule, fragmentModule, parsedCode.entryPoints[0].name, format);
-    runRenderPass(device, context, pipeline);
+    const pipelineLayout = device.createPipelineLayout({
+      bindGroupLayouts: [bindGroupLayout],
+    });
+    const pipeline = createFullscreenPipeline(device, vertexModule, fragmentModule, parsedCode.entryPoints[0].name, format, pipelineLayout);
+    runRenderPass(device, context, pipeline, bindGroup);
 
     // Pop error scope
     const error = await device.popErrorScope();
