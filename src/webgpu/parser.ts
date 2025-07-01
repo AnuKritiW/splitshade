@@ -5,14 +5,32 @@ export function parseWGSL(wgslCode: string) {
     const reflect = new WgslReflect(wgslCode);
     const entries = reflect.entry;
 
-    if (entries.compute.length > 0) {
-      return { type: 'compute', entryPoints: entries.compute };
-    } else if (entries.vertex.length > 0 && entries.fragment.length > 0) {
-      return { type: 'render', entryPoints: { vertex: entries.vertex, fragment: entries.fragment } };
+    const hasFragment = entries.fragment.length > 0;
+    const hasVertex = entries.vertex.length > 0;
+    const hasCompute = entries.compute.length > 0;
+
+    if (hasFragment) {
+      return {
+        type: 'fragment-only',
+        entryPoints: entries.fragment,
+        valid: true,
+        warnings: [
+          ...(hasVertex ? ['Note: vertex shader detected but ignored.'] : []),
+          ...(hasCompute ? ['Note: compute shader detected but ignored.'] : []),
+        ],
+      };
     } else {
-      return { type: 'unknown', entryPoints: {} };
+      return {
+        type: 'invalid',
+        valid: false,
+        message: 'Only fragment shaders are supported in this playground.',
+      };
     }
   } catch (err) {
-    return { type: 'error', error: err.message };
+    return {
+      type: 'error',
+      valid: false,
+      error: err.message,
+    };
   }
 }
