@@ -91,7 +91,9 @@ function runRenderPass(
   device: GPUDevice,
   context: GPUCanvasContext,
   pipeline: GPURenderPipeline,
-  bindGroup: GPUBindGroup
+  bindGroup: GPUBindGroup,
+  timeBuffer: GPUBuffer,
+  startTime: number
 ) {
   // Encode commands
   const encoder = device.createCommandEncoder();
@@ -109,10 +111,13 @@ function runRenderPass(
   pass.draw(3); // Fullscreen triangle
   pass.end();
 
+  const elapsed = (performance.now() - startTime) / 1000.0;
+  device.queue.writeBuffer(timeBuffer, 0, new Float32Array([elapsed]));
+
   device.queue.submit([encoder.finish()]);
 }
 
-function createResolutionUniform(device: GPUDevice, canvas: HTMLCanvasElement)
+function createUniforms(device: GPUDevice, canvas: HTMLCanvasElement)
 {
   const resolutionData = new Float32Array([
     canvas.width,
@@ -120,17 +125,30 @@ function createResolutionUniform(device: GPUDevice, canvas: HTMLCanvasElement)
     1.0,
   ]);
 
-  const buffer = device.createBuffer({
+  const timeData = new Float32Array([0.0]); // will update every frame
+
+  const resolutionBuffer = device.createBuffer({
     size: resolutionData.byteLength,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
 
-  device.queue.writeBuffer(buffer, 0, resolutionData);
+  const timeBuffer = device.createBuffer({
+    size: timeData.byteLength,
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+  });
+
+  device.queue.writeBuffer(resolutionBuffer, 0, resolutionData);
+  device.queue.writeBuffer(timeBuffer, 0, timeData);
 
   const bindGroupLayout = device.createBindGroupLayout({
     entries: [
       {
         binding: 0,
+        visibility: GPUShaderStage.FRAGMENT,
+        buffer: { type: "uniform" },
+      },
+      {
+        binding: 1,
         visibility: GPUShaderStage.FRAGMENT,
         buffer: { type: "uniform" },
       },
@@ -140,14 +158,13 @@ function createResolutionUniform(device: GPUDevice, canvas: HTMLCanvasElement)
   const bindGroup = device.createBindGroup({
     layout: bindGroupLayout,
     entries: [
-      {
-        binding: 0,
-        resource: { buffer },
-      },
+      { binding: 0, resource: { buffer: resolutionBuffer } },
+      { binding: 1, resource: { buffer: timeBuffer } }
     ],
   });
 
-  return { bindGroupLayout, bindGroup };
+  return { bindGroupLayout, bindGroup,
+           timeBuffer, startTime: performance.now()};
 }
 
 // TODO: check where we are logging direct to console versus output()
@@ -190,7 +207,8 @@ export async function initWebGPU(
     if (!fragmentModule) return;
 
     // Create iResolution uniform (vec3<f32>: width, height, 1.0)
-    const { bindGroupLayout, bindGroup } = createResolutionUniform(device, canvas);
+    // Create iTime uniform (f32: 0.0)
+    const { bindGroupLayout, bindGroup, timeBuffer, startTime } = createUniforms(device, canvas);
 
     // catch any validation errors that happen in this scope
     // this is useful for catching shader compilation errors
@@ -201,7 +219,12 @@ export async function initWebGPU(
       bindGroupLayouts: [bindGroupLayout],
     });
     const pipeline = createFullscreenPipeline(device, vertexModule, fragmentModule, parsedCode.entryPoints[0].name, format, pipelineLayout);
-    runRenderPass(device, context, pipeline, bindGroup);
+
+    function frame() {
+      runRenderPass(device, context, pipeline, bindGroup, timeBuffer, startTime);
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
 
     // Pop error scope
     const error = await device.popErrorScope();
