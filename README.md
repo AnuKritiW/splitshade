@@ -1,5 +1,32 @@
-# Vue 3 + TypeScript + Vite
+# SplitShade - a browser-based WebGPU Playground
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+This project is a work in progress. For now, I am storing some notes on my README as I go along.
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+## Developer Notes
+
+This version of the playground enforces a ShaderToy-style execution model:
+- Only fragment shaders are accepted from user input.
+- A hardcoded fullscreen vertex shader is injected automatically at runtime.
+- Fragment shaders are compiled and run over the entire canvas using a triangle covering the full screen.
+- Vertex and compute entry points are still detected (via `wgsl_reflect`), but are ignored and warned about in the console.
+
+This setup ensures that users can write fragment shaders without having to define vertex logic or pipeline configuration.
+
+### Injected Uniforms
+
+The following uniforms are automatically injected and available to fragment shaders:
+
+- `iResolution: vec3<f32>`  
+  - Canvas resolution in pixels: (width, height, 1.0)
+
+- `iTime: f32`  
+  - Seconds since the render loop began
+
+- `iMouse: vec4<f32>`  
+  - Mouse position in pixels (`x`, `y`), click state (`z` = 1.0 when down, 0.0 otherwise), and padding (`w` = 0.0)
+
+### Shader Examples
+
+- `whiteCircle-resolutionTest.wgsl`: Uses `iResolution`
+- `pulsingColours-timeTest.wgsl`: Uses `iTime`
+- `mousePointerTest.wgsl`: Uses `iMouse`

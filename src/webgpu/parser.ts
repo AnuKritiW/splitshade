@@ -1,0 +1,36 @@
+import { WgslReflect } from 'wgsl_reflect';
+
+export function parseWGSL(wgslCode: string) {
+  try {
+    const reflect = new WgslReflect(wgslCode);
+    const entries = reflect.entry;
+
+    const hasFragment = entries.fragment.length > 0;
+    const hasVertex = entries.vertex.length > 0;
+    const hasCompute = entries.compute.length > 0;
+
+    if (hasFragment) {
+      return {
+        type: 'fragment-only',
+        entryPoints: entries.fragment,
+        valid: true,
+        warnings: [
+          ...(hasVertex ? ['Note: vertex shader detected but ignored.'] : []),
+          ...(hasCompute ? ['Note: compute shader detected but ignored.'] : []),
+        ],
+      };
+    } else {
+      return {
+        type: 'invalid',
+        valid: false,
+        message: 'Only fragment shaders are supported in this playground.',
+      };
+    }
+  } catch (err) {
+    return {
+      type: 'error',
+      valid: false,
+      error: err.message,
+    };
+  }
+}
