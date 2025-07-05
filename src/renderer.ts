@@ -127,6 +127,8 @@ function createUniforms(device: GPUDevice, canvas: HTMLCanvasElement)
 
   const timeData = new Float32Array([0.0]); // will update every frame
 
+  const mouseData = new Float32Array([0.0, 0.0, 0.0, 0.0]);
+
   const resolutionBuffer = device.createBuffer({
     size: resolutionData.byteLength,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
@@ -137,8 +139,14 @@ function createUniforms(device: GPUDevice, canvas: HTMLCanvasElement)
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
 
+  const mouseBuffer = device.createBuffer({
+    size: mouseData.byteLength,
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+  });
+
   device.queue.writeBuffer(resolutionBuffer, 0, resolutionData);
   device.queue.writeBuffer(timeBuffer, 0, timeData);
+  device.queue.writeBuffer(mouseBuffer, 0, mouseData);
 
   const bindGroupLayout = device.createBindGroupLayout({
     entries: [
@@ -152,6 +160,11 @@ function createUniforms(device: GPUDevice, canvas: HTMLCanvasElement)
         visibility: GPUShaderStage.FRAGMENT,
         buffer: { type: "uniform" },
       },
+      {
+        binding: 2,
+        visibility: GPUShaderStage.FRAGMENT,
+        buffer: { type: "uniform" },
+      }
     ],
   });
 
@@ -159,12 +172,13 @@ function createUniforms(device: GPUDevice, canvas: HTMLCanvasElement)
     layout: bindGroupLayout,
     entries: [
       { binding: 0, resource: { buffer: resolutionBuffer } },
-      { binding: 1, resource: { buffer: timeBuffer } }
+      { binding: 1, resource: { buffer: timeBuffer } },
+      { binding: 2, resource: { buffer: mouseBuffer } },
     ],
   });
 
   return { bindGroupLayout, bindGroup,
-           timeBuffer, startTime: performance.now()};
+           timeBuffer, startTime: performance.now(), mouseBuffer};
 }
 
 // TODO: check where we are logging direct to console versus output()
@@ -185,6 +199,21 @@ export async function initWebGPU(
     if (!device || !adapter) return;
 
     const { context, format } = configureCanvasContext(canvas, device);
+
+    canvas.width = canvas.clientWidth * window.devicePixelRatio;
+    canvas.height = canvas.clientHeight * window.devicePixelRatio;
+
+    const mouse = { x: 0, y: 0, down: false };
+
+    canvas.addEventListener("mousemove", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const scale = window.devicePixelRatio;
+      mouse.x = (e.clientX - rect.left) * scale;
+      mouse.y = (e.clientY - rect.top) * scale;
+    });
+
+    canvas.addEventListener("mousedown", () => { mouse.down = true; });
+    canvas.addEventListener("mouseup", () => { mouse.down = false; });
 
     const parsedCode = parseWGSL(shaderCode);
     output(`Detected shader type: ${parsedCode.type}`);
@@ -208,7 +237,7 @@ export async function initWebGPU(
 
     // Create iResolution uniform (vec3<f32>: width, height, 1.0)
     // Create iTime uniform (f32: 0.0)
-    const { bindGroupLayout, bindGroup, timeBuffer, startTime } = createUniforms(device, canvas);
+    const { bindGroupLayout, bindGroup, timeBuffer, startTime, mouseBuffer } = createUniforms(device, canvas);
 
     // catch any validation errors that happen in this scope
     // this is useful for catching shader compilation errors
@@ -221,6 +250,17 @@ export async function initWebGPU(
     const pipeline = createFullscreenPipeline(device, vertexModule, fragmentModule, parsedCode.entryPoints[0].name, format, pipelineLayout);
 
     function frame() {
+      const elapsed = (performance.now() - startTime) / 1000.0;
+      device.queue.writeBuffer(timeBuffer, 0, new Float32Array([elapsed]));
+
+      const mouseVec4 = new Float32Array([
+        mouse.x,
+        mouse.y,
+        mouse.down ? 1.0 : 0.0,
+        0.0 // padding for vec4
+      ]);
+      device.queue.writeBuffer(mouseBuffer, 0, mouseVec4);
+
       runRenderPass(device, context, pipeline, bindGroup, timeBuffer, startTime);
       requestAnimationFrame(frame);
     }
