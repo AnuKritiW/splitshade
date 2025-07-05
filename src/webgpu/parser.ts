@@ -27,10 +27,11 @@ export function parseWGSL(wgslCode: string) {
       };
     }
   } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
     return {
       type: 'error',
       valid: false,
-      error: err.message,
+      error: message,
     };
   }
 }

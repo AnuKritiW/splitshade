@@ -228,6 +228,11 @@ export async function initWebGPU(
       parsedCode.warnings.forEach(output);
     }
 
+    if (!parsedCode.entryPoints || parsedCode.entryPoints.length === 0) {
+      console.error("No entry points found in shader code.");
+      return;
+    }
+
     // Compile fragment and hardcoded vertex shader
     const vertexModule = device.createShaderModule({
       code: fullscreenVertexWGSL,
@@ -250,6 +255,8 @@ export async function initWebGPU(
     const pipeline = createFullscreenPipeline(device, vertexModule, fragmentModule, parsedCode.entryPoints[0].name, format, pipelineLayout);
 
     function frame() {
+      if (!device) return;
+
       const elapsed = (performance.now() - startTime) / 1000.0;
       device.queue.writeBuffer(timeBuffer, 0, new Float32Array([elapsed]));
 
