@@ -10,6 +10,9 @@ import { getWebGPUDevice } from './context';
 
 export const DEFAULT_TEXTURES = [
   { name: 'Abstract 1', path: '/splitshade/textures/abstract1.jpg' }, // public/ path
+  { name: 'Abstract 2', path: '/splitshade/textures/abstract2.jpg' },
+  { name: 'Abstract 3', path: '/splitshade/textures/abstract3.jpg' },
+  { name: 'Abstract 4', path: '/splitshade/textures/abstract4.png' },
 ]
 
 export async function loadDefaultTexture(device: GPUDevice, src: string): Promise<{

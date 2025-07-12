@@ -23,15 +23,18 @@ const selectedTextures = reactive({
 })
 
 selectedTextures.iChannel0 = DEFAULT_TEXTURES[0].path
+selectedTextures.iChannel1 = DEFAULT_TEXTURES[1].path
+selectedTextures.iChannel2 = DEFAULT_TEXTURES[2].path
+selectedTextures.iChannel3 = DEFAULT_TEXTURES[3].path
 
 function runShader() {
-  if (canvasRef.value && selectedTextures.iChannel0) {
-    // consoleOutput.value = "Compiled successfully, running shader..."
-    consoleOutput.value = ""
-    initWebGPU(canvasRef.value, code.value, selectedTextures.iChannel0, (msg) => {
-      consoleOutput.value += (msg || "Compiled successfully") + '\n'
-    })
-  }
+  if (!canvasRef.value || !selectedTextures) return;
+
+  // consoleOutput.value = "Compiled successfully, running shader..."
+  consoleOutput.value = ""
+  initWebGPU(canvasRef.value, code.value, selectedTextures, (msg) => {
+    consoleOutput.value += (msg || "Compiled successfully") + '\n'
+  })
 }
 
 
