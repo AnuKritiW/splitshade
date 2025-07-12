@@ -15,16 +15,6 @@ loader.config({
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 const consoleOutput = ref("")
-function runShader() {
-  if (canvasRef.value) {
-    // consoleOutput.value = "Compiled successfully, running shader..."
-    consoleOutput.value = ""
-    initWebGPU(canvasRef.value, code.value, (msg) => {
-      consoleOutput.value += (msg || "Compiled successfully") + '\n'
-    })
-  }
-}
-
 const selectedTextures = reactive({
   iChannel0: null as string | null,
   iChannel1: null as string | null,
@@ -33,6 +23,17 @@ const selectedTextures = reactive({
 })
 
 selectedTextures.iChannel0 = DEFAULT_TEXTURES[0].path
+
+function runShader() {
+  if (canvasRef.value && selectedTextures.iChannel0) {
+    // consoleOutput.value = "Compiled successfully, running shader..."
+    consoleOutput.value = ""
+    initWebGPU(canvasRef.value, code.value, selectedTextures.iChannel0, (msg) => {
+      consoleOutput.value += (msg || "Compiled successfully") + '\n'
+    })
+  }
+}
+
 
 const showTextureModal = ref(false)
 const activeChannel = ref('')

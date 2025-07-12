@@ -1,5 +1,6 @@
 import { parseWGSL } from './webgpu/parser';
 import { loadDefaultTexture } from './webgpu/textures';
+import { getWebGPUDevice } from './webgpu/context';
 
 const fullscreenVertexWGSL = `
 @vertex
@@ -12,28 +13,6 @@ fn main(@builtin(vertex_index) vertexIndex : u32) -> @builtin(position) vec4<f32
   return vec4<f32>(pos[vertexIndex], 0.0, 1.0);
 }
 `;
-
-async function getWebGPUDevice() {
-  if (!navigator.gpu) {
-    console.error("WebGPU not supported.");
-    return { device: null, adapter: null };
-  }
-
-  const adapter = await navigator.gpu.requestAdapter();
-  if (!adapter) {
-    console.error("Failed to get GPU adapter");
-    return { device: null, adapter: null };
-  }
-
-  const device = await adapter.requestDevice();
-  if (!device) {
-    console.error("Failed to get GPU device");
-    return { device: null, adapter: null };
-  }
-
-  console.log("Got GPU device:", device);
-  return { device, adapter };
-}
 
 function configureCanvasContext(canvas: HTMLCanvasElement, device: GPUDevice) {
   const context = canvas.getContext("webgpu") as GPUCanvasContext;
@@ -198,6 +177,7 @@ function createUniforms(device: GPUDevice, canvas: HTMLCanvasElement, textureVie
 export async function initWebGPU(
   canvas: HTMLCanvasElement,
   shaderCode: string,
+  texturePath: string,
   onConsoleOutput?: (msg: string) => void
 ) {
   const output = (msg: string) => {
@@ -253,7 +233,7 @@ export async function initWebGPU(
     const fragmentModule = await compileShaderModule(device, shaderCode, output);
     if (!fragmentModule) return;
 
-    const { textureView, sampler } = await loadDefaultTexture(device);
+    const { textureView, sampler } = await loadDefaultTexture(device, texturePath);
 
     // Create iResolution uniform (vec3<f32>: width, height, 1.0)
     // Create iTime uniform (f32: 0.0)
