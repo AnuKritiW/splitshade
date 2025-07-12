@@ -104,19 +104,19 @@ const channelList: ChannelKey[] = ['iChannel0', 'iChannel1', 'iChannel2', 'iChan
                   size="small"
                   block
                   @click="openTextureModal(channel)"
+                  class="n-button texture-button"
                 >
-                  <template #icon>
+                  <template #default>
                     <img
                       v-if="selectedTextures[channel]"
                       :src="selectedTextures[channel]"
                       :alt="channel"
-                      style="width: 1.5rem; height: 1.5rem; object-fit: cover"
+                      class="button-bg"
                     />
+                    <span class="button-label">{{ channel }}</span>
                   </template>
-                  <span v-if="!selectedTextures[channel]">{{ channel }}</span>
                 </n-button>
               </div>
-
             </n-tab-pane>
 
             <n-tab-pane name="mesh" tab="Mesh">
@@ -216,6 +216,7 @@ html, body, #app, .n-layout {
   padding-bottom: 16px;
 }
 
+/* Container for texture buttons inside 'Textures' tab */
 .texture-buttons {
   display: flex;
   flex-direction: row;
@@ -223,15 +224,42 @@ html, body, #app, .n-layout {
   padding: 8px;
 }
 
+/* Base button layout: sizing and appearance */
 .texture-buttons .n-button {
   flex: 1;
-  aspect-ratio: 1 / .4;        /* Makes them square */
+  aspect-ratio: 1 / .4;       /* Makes them square */
   height: auto;               /* Let height be defined by width via aspect ratio */
-  padding: 0;                 /* Optional: tighter padding */
+  padding: 0;                 /* Removes inner padding for tighter fit */
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;         /* Smaller font if needed */
+  font-size: 0.75rem;         /* Smaller font for labels */
+}
+
+/* Individual texture button: enables layered image + label */
+.texture-button {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Background thumbnail image (stretched to fill button) */
+.texture-button .button-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;          /* Preserves aspect ratio, fills area */
+  z-index: 0;
+  opacity: 0.6;               /* Faint background behind label */
+}
+
+/* Overlay label for each channel (e.g., 'iChannel0') */
+.texture-button .button-label {
+  position: relative;
+  z-index: 1;
+  color: white;
+  font-weight: bold;
 }
 
 </style>
