@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { darkTheme } from 'naive-ui'
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 const code = ref(`// Write your WGSL code here`)
 
+import { DEFAULT_TEXTURES } from './webgpu/textures'
 import { initWebGPU } from './renderer'
 
 import { VueMonacoEditor, loader } from '@guolao/vue-monaco-editor'
@@ -30,6 +31,8 @@ const selectedTextures = reactive({
   iChannel2: null as string | null,
   iChannel3: null as string | null
 })
+
+selectedTextures.iChannel0 = DEFAULT_TEXTURES[0].path
 
 const showTextureModal = ref(false)
 const activeChannel = ref('')
@@ -59,6 +62,12 @@ function handleUpload({ file, onFinish }: any) {
 
 type ChannelKey = 'iChannel0' | 'iChannel1' | 'iChannel2' | 'iChannel3'
 const channelList: ChannelKey[] = ['iChannel0', 'iChannel1', 'iChannel2', 'iChannel3']
+
+const uploadedTextures = ref<string[]>([])
+
+const allTextures = computed(() =>
+  DEFAULT_TEXTURES.map(tex => tex.path).concat(uploadedTextures.value)
+)
 
 </script>
 
@@ -127,13 +136,14 @@ const channelList: ChannelKey[] = ['iChannel0', 'iChannel1', 'iChannel2', 'iChan
               <n-card title="Select or Upload Texture" style="width: 600px">
                 <div class="thumbnail-grid" style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
                   <n-image
-                    v-for="(img, index) in availableTextures"
+                    v-for="(img, index) in allTextures"
                     :key="index"
                     :src="img"
                     width="80"
                     height="80"
                     style="cursor: pointer; border-radius: 4px"
                     @click="selectTexture(img)"
+                    :preview-disabled="true"
                   />
                 </div>
 

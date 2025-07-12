@@ -6,13 +6,17 @@
  * A sampler defines how that texture is accessed (filtering, wrapping, etc)
  */
 
+export const DEFAULT_TEXTURES = [
+  { name: 'Abstract 1', path: '/splitshade/textures/abstract1.jpg' }, // public/ path
+]
+
 export async function loadDefaultTexture(device: GPUDevice): Promise<{
   textureView: GPUTextureView;
   sampler: GPUSampler;
 }> {
   const img = new Image();
   // TODO: use a more robust path resolution method, e.g. import.meta.url or a relative path
-  img.src = '/splitshade/textures/abstract1.jpg'; // public/ path
+  img.src = DEFAULT_TEXTURES[0].path;
   await img.decode();
 
   // Converts the HTMLImageElement into an ImageBitmap, which is optimized for GPU usage
