@@ -1,4 +1,5 @@
 import { parseWGSL } from './webgpu/parser';
+import { loadDefaultTexture } from './webgpu/textures';
 
 const fullscreenVertexWGSL = `
 @vertex
@@ -117,7 +118,7 @@ function runRenderPass(
   device.queue.submit([encoder.finish()]);
 }
 
-function createUniforms(device: GPUDevice, canvas: HTMLCanvasElement)
+function createUniforms(device: GPUDevice, canvas: HTMLCanvasElement, textureView: GPUTextureView, sampler: GPUSampler)
 {
   const resolutionData = new Float32Array([
     canvas.width,
@@ -164,7 +165,17 @@ function createUniforms(device: GPUDevice, canvas: HTMLCanvasElement)
         binding: 2,
         visibility: GPUShaderStage.FRAGMENT,
         buffer: { type: "uniform" },
-      }
+      },
+      {
+        binding: 3,
+        visibility: GPUShaderStage.FRAGMENT,
+        texture: { sampleType: 'float' },
+      },
+      {
+        binding: 4,
+        visibility: GPUShaderStage.FRAGMENT,
+        sampler: { type: 'filtering' },
+      },
     ],
   });
 
@@ -174,6 +185,8 @@ function createUniforms(device: GPUDevice, canvas: HTMLCanvasElement)
       { binding: 0, resource: { buffer: resolutionBuffer } },
       { binding: 1, resource: { buffer: timeBuffer } },
       { binding: 2, resource: { buffer: mouseBuffer } },
+      { binding: 3, resource: textureView },
+      { binding: 4, resource: sampler },
     ],
   });
 
@@ -240,9 +253,11 @@ export async function initWebGPU(
     const fragmentModule = await compileShaderModule(device, shaderCode, output);
     if (!fragmentModule) return;
 
+    const { textureView, sampler } = await loadDefaultTexture(device);
+
     // Create iResolution uniform (vec3<f32>: width, height, 1.0)
     // Create iTime uniform (f32: 0.0)
-    const { bindGroupLayout, bindGroup, timeBuffer, startTime, mouseBuffer } = createUniforms(device, canvas);
+    const { bindGroupLayout, bindGroup, timeBuffer, startTime, mouseBuffer } = createUniforms(device, canvas, textureView, sampler);
 
     // catch any validation errors that happen in this scope
     // this is useful for catching shader compilation errors

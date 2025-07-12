@@ -24,6 +24,8 @@ function runShader() {
   }
 }
 
+const expandedNames = ref(['textures']) // default open
+
 </script>
 
 <template>
@@ -34,7 +36,8 @@ function runShader() {
       </n-layout-header>
 
       <div class="grid-container">
-        <n-card title="Editor" size="small" class="panel editor">
+        <!-- Editor (top-left) -->
+        <n-card title="Editor" size="small" class="panel editor" style="grid-row: 1; grid-column: 1;">
           <VueMonacoEditor
             language="wgsl"
             theme="vs-dark"
@@ -46,12 +49,38 @@ function runShader() {
           </template>
         </n-card>
 
-        <n-card title="Preview" size="small" class="panel">
+        <!-- Preview (top-right) -->
+        <n-card title="Preview" size="small" class="panel" style="grid-row: 1; grid-column: 2;">
           <canvas ref="canvasRef" id="gfx" style="width: 100%; height: 100%;"></canvas>
         </n-card>
 
-        <n-card title="Console" size="small" class="panel panel-console">
-          <div class="console-content" style="font-family: monospace; color: #ccc; white-space: pre-wrap; padding:8px; overflow-y:auto; flex:1;">
+        <!-- Textures (bottom-left) -->
+        <n-card
+          title="Resources"
+          size="small"
+          embedded
+          class="resources-card"
+        >
+          <n-tabs type="segment" animated>
+            <n-tab-pane name="textures" tab="Textures">
+              <div class="texture-buttons">
+                <n-button size="small" block>iChannel0</n-button>
+                <n-button size="small" block>iChannel1</n-button>
+                <n-button size="small" block>iChannel2</n-button>
+                <n-button size="small" block>iChannel3</n-button>
+              </div>
+            </n-tab-pane>
+
+            <n-tab-pane name="mesh" tab="Mesh">
+              <!-- Empty for now -->
+            </n-tab-pane>
+          </n-tabs>
+        </n-card>
+
+
+        <!-- Console (bottom-right) -->
+        <n-card title="Console" size="small" class="panel panel-console" style="grid-row: 2; grid-column: 2;">
+          <div class="console-content">
             {{ consoleOutput }}
           </div>
         </n-card>
@@ -116,5 +145,22 @@ html, body, #app, .n-layout {
   padding-bottom: 16px;
 }
 
+.texture-buttons {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  padding: 8px;
+}
+
+.texture-buttons .n-button {
+  flex: 1;
+  aspect-ratio: 1 / .4;        /* Makes them square */
+  height: auto;               /* Let height be defined by width via aspect ratio */
+  padding: 0;                 /* Optional: tighter padding */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;         /* Smaller font if needed */
+}
 
 </style>
