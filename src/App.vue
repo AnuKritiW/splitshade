@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { darkTheme } from 'naive-ui'
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
 const code = ref(`// Write your WGSL code here`)
 
 import { initWebGPU } from './renderer'
@@ -24,7 +24,41 @@ function runShader() {
   }
 }
 
-const expandedNames = ref(['textures']) // default open
+const selectedTextures = reactive({
+  iChannel0: null as string | null,
+  iChannel1: null as string | null,
+  iChannel2: null as string | null,
+  iChannel3: null as string | null
+})
+
+const showTextureModal = ref(false)
+const activeChannel = ref('')
+const availableTextures = ref<string[]>([])
+
+function openTextureModal(channel: string) {
+  activeChannel.value = channel
+  showTextureModal.value = true
+}
+
+function selectTexture(img: string) {
+  selectedTextures[activeChannel.value as keyof typeof selectedTextures] = img
+  showTextureModal.value = false
+}
+
+function handleUpload({ file, onFinish }: any) {
+  const reader = new FileReader()
+  reader.onload = () => {
+    const imgSrc = reader.result as string
+    availableTextures.value.push(imgSrc)
+    selectedTextures[activeChannel.value as keyof typeof selectedTextures] = imgSrc
+    showTextureModal.value = false
+    onFinish()
+  }
+  reader.readAsDataURL(file.file)
+}
+
+type ChannelKey = 'iChannel0' | 'iChannel1' | 'iChannel2' | 'iChannel3'
+const channelList: ChannelKey[] = ['iChannel0', 'iChannel1', 'iChannel2', 'iChannel3']
 
 </script>
 
@@ -64,17 +98,54 @@ const expandedNames = ref(['textures']) // default open
           <n-tabs type="segment" animated>
             <n-tab-pane name="textures" tab="Textures">
               <div class="texture-buttons">
-                <n-button size="small" block>iChannel0</n-button>
-                <n-button size="small" block>iChannel1</n-button>
-                <n-button size="small" block>iChannel2</n-button>
-                <n-button size="small" block>iChannel3</n-button>
+                <n-button
+                  v-for="channel in channelList"
+                  :key="channel"
+                  size="small"
+                  block
+                  @click="openTextureModal(channel)"
+                >
+                  <template #icon>
+                    <img
+                      v-if="selectedTextures[channel]"
+                      :src="selectedTextures[channel]"
+                      :alt="channel"
+                      style="width: 1.5rem; height: 1.5rem; object-fit: cover"
+                    />
+                  </template>
+                  <span v-if="!selectedTextures[channel]">{{ channel }}</span>
+                </n-button>
               </div>
+
             </n-tab-pane>
 
             <n-tab-pane name="mesh" tab="Mesh">
               <!-- Empty for now -->
             </n-tab-pane>
           </n-tabs>
+            <n-modal v-model:show="showTextureModal">
+              <n-card title="Select or Upload Texture" style="width: 600px">
+                <div class="thumbnail-grid" style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+                  <n-image
+                    v-for="(img, index) in availableTextures"
+                    :key="index"
+                    :src="img"
+                    width="80"
+                    height="80"
+                    style="cursor: pointer; border-radius: 4px"
+                    @click="selectTexture(img)"
+                  />
+                </div>
+
+                <n-upload
+                  accept="image/*"
+                  :custom-request="handleUpload"
+                  :show-file-list="false"
+                >
+                  <n-button block>Upload New Texture</n-button>
+                </n-upload>
+              </n-card>
+            </n-modal>
         </n-card>
 
 
