@@ -1,4 +1,6 @@
 import { parseWGSL } from './webgpu/parser';
+import { loadDefaultTexture } from './webgpu/textures';
+import { getWebGPUDevice } from './webgpu/context';
 
 const fullscreenVertexWGSL = `
 @vertex
@@ -12,27 +14,19 @@ fn main(@builtin(vertex_index) vertexIndex : u32) -> @builtin(position) vec4<f32
 }
 `;
 
-async function getWebGPUDevice() {
-  if (!navigator.gpu) {
-    console.error("WebGPU not supported.");
-    return { device: null, adapter: null };
-  }
-
-  const adapter = await navigator.gpu.requestAdapter();
-  if (!adapter) {
-    console.error("Failed to get GPU adapter");
-    return { device: null, adapter: null };
-  }
-
-  const device = await adapter.requestDevice();
-  if (!device) {
-    console.error("Failed to get GPU device");
-    return { device: null, adapter: null };
-  }
-
-  console.log("Got GPU device:", device);
-  return { device, adapter };
-}
+const injectedHeader = `
+@group(0) @binding(0) var<uniform> iResolution: vec3<f32>;
+@group(0) @binding(1) var<uniform> iTime: f32;
+@group(0) @binding(2) var<uniform> iMouse: vec4<f32>;
+@group(0) @binding(3) var iChannel0: texture_2d<f32>;
+@group(0) @binding(4) var iChannel0Sampler: sampler;
+@group(0) @binding(5) var iChannel1: texture_2d<f32>;
+@group(0) @binding(6) var iChannel1Sampler: sampler;
+@group(0) @binding(7) var iChannel2: texture_2d<f32>;
+@group(0) @binding(8) var iChannel2Sampler: sampler;
+@group(0) @binding(9) var iChannel3: texture_2d<f32>;
+@group(0) @binding(10) var iChannel3Sampler: sampler;
+`;
 
 function configureCanvasContext(canvas: HTMLCanvasElement, device: GPUDevice) {
   const context = canvas.getContext("webgpu") as GPUCanvasContext;
@@ -117,7 +111,11 @@ function runRenderPass(
   device.queue.submit([encoder.finish()]);
 }
 
-function createUniforms(device: GPUDevice, canvas: HTMLCanvasElement)
+function createUniforms(
+  device: GPUDevice,
+  canvas: HTMLCanvasElement,
+  textureBindings: ({ textureView: GPUTextureView; sampler: GPUSampler } | null)[]
+)
 {
   const resolutionData = new Float32Array([
     canvas.width,
@@ -148,33 +146,65 @@ function createUniforms(device: GPUDevice, canvas: HTMLCanvasElement)
   device.queue.writeBuffer(timeBuffer, 0, timeData);
   device.queue.writeBuffer(mouseBuffer, 0, mouseData);
 
-  const bindGroupLayout = device.createBindGroupLayout({
-    entries: [
+  const layoutEntries: GPUBindGroupLayoutEntry[] = [
       {
         binding: 0,
         visibility: GPUShaderStage.FRAGMENT,
-        buffer: { type: "uniform" },
+        buffer: { type: "uniform" }
       },
       {
         binding: 1,
         visibility: GPUShaderStage.FRAGMENT,
-        buffer: { type: "uniform" },
+        buffer: { type: "uniform" }
       },
       {
         binding: 2,
         visibility: GPUShaderStage.FRAGMENT,
-        buffer: { type: "uniform" },
+        buffer: { type: "uniform" }
       }
-    ],
+    ];
+
+  textureBindings.forEach((binding, i) => {
+    if (!binding) return;
+    const base = 3 + i * 2;
+    layoutEntries.push({
+      binding: base,
+      visibility: GPUShaderStage.FRAGMENT,
+      texture: { sampleType: 'float' }
+    });
+    layoutEntries.push({
+      binding: base + 1,
+      visibility: GPUShaderStage.FRAGMENT,
+      sampler: { type: 'filtering' }
+    });
+  });
+
+  const bindGroupLayout = device.createBindGroupLayout({
+    entries: layoutEntries,
+  });
+
+  const entries: GPUBindGroupEntry[] = [
+    { binding: 0, resource: { buffer: resolutionBuffer } },
+    { binding: 1, resource: { buffer: timeBuffer } },
+    { binding: 2, resource: { buffer: mouseBuffer } }
+  ];
+
+  textureBindings.forEach((binding, i) => {
+    if (!binding) return;
+    const base = 3 + i * 2;
+    entries.push({
+      binding: base,
+      resource: binding.textureView,
+    });
+    entries.push({
+      binding: base + 1,
+      resource: binding.sampler,
+    });
   });
 
   const bindGroup = device.createBindGroup({
     layout: bindGroupLayout,
-    entries: [
-      { binding: 0, resource: { buffer: resolutionBuffer } },
-      { binding: 1, resource: { buffer: timeBuffer } },
-      { binding: 2, resource: { buffer: mouseBuffer } },
-    ],
+    entries,
   });
 
   return { bindGroupLayout, bindGroup,
@@ -185,6 +215,12 @@ function createUniforms(device: GPUDevice, canvas: HTMLCanvasElement)
 export async function initWebGPU(
   canvas: HTMLCanvasElement,
   shaderCode: string,
+  selectedTextures: {
+    iChannel0: string | null;
+    iChannel1: string | null;
+    iChannel2: string | null;
+    iChannel3: string | null;
+  },
   onConsoleOutput?: (msg: string) => void
 ) {
   const output = (msg: string) => {
@@ -237,12 +273,24 @@ export async function initWebGPU(
     const vertexModule = device.createShaderModule({
       code: fullscreenVertexWGSL,
     });
-    const fragmentModule = await compileShaderModule(device, shaderCode, output);
+    const fullShaderCode = injectedHeader + '\n' + shaderCode;
+    const fragmentModule = await compileShaderModule(device, fullShaderCode, output);
     if (!fragmentModule) return;
+
+    if (!selectedTextures.iChannel0) return output("No texture provided for iChannel0");
+
+    const textureBindings = await Promise.all(
+      [selectedTextures.iChannel0, selectedTextures.iChannel1, selectedTextures.iChannel2, selectedTextures.iChannel3].map(async (src) => {
+        if (!src) return null;
+        return await loadDefaultTexture(device, src);
+      })
+    );
+
+    // const { textureView, sampler } = await loadDefaultTexture(device, selectedTextures.iChannel0);
 
     // Create iResolution uniform (vec3<f32>: width, height, 1.0)
     // Create iTime uniform (f32: 0.0)
-    const { bindGroupLayout, bindGroup, timeBuffer, startTime, mouseBuffer } = createUniforms(device, canvas);
+    const { bindGroupLayout, bindGroup, timeBuffer, startTime, mouseBuffer } = createUniforms(device, canvas, textureBindings); //textureView, sampler);
 
     // catch any validation errors that happen in this scope
     // this is useful for catching shader compilation errors

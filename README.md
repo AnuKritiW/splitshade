@@ -25,8 +25,36 @@ The following uniforms are automatically injected and available to fragment shad
 - `iMouse: vec4<f32>`  
   - Mouse position in pixels (`x`, `y`), click state (`z` = 1.0 when down, 0.0 otherwise), and padding (`w` = 0.0)
 
+- `iChannel0-3`
+- `iChannel0-3Sampler`
+
+### Texture + Sampler Support
+
+This phase adds support for rendering with an external image using `textureSample()` in fragment shaders. The image is loaded at runtime and passed to the shader via a bind group containing both a **texture view** and a **sampler**.
+
+- The image is placed in `public/textures/` and served via the Vite base URL (`/splitshade/`).
+- A `GPUTexture` is created from the decoded image bitmap.
+- A `GPUTextureView` and `GPUSampler` are then created and added to the shader’s bind group at bindings `@binding(3)` and `@binding(4)`, respectively.
+
 ### Shader Examples
 
 - `whiteCircle-resolutionTest.wgsl`: Uses `iResolution`
 - `pulsingColours-timeTest.wgsl`: Uses `iTime`
 - `mousePointerTest.wgsl`: Uses `iMouse`
+- `defaultTex.wgsl`: Uses `iChannel0` abd `iChannel0Sampler`
+
+### Sampler Types (KIV)
+
+Currently, all injected samplers (e.g., iChannel0Sampler) are created as filtering samplers, which allow interpolated sampling via textureSample(). This matches the typical behavior expected in ShaderToy-style fragment shaders.
+
+In the future, other sampler types could be supported like:
+- sampler (non-filtering) — for manual mip-level control or compute shaders.
+- sampler_comparison — for depth texture sampling (e.g., shadows).
+
+# Sources/References
+
+- https://shadertoyunofficial.wordpress.com/2019/07/23/shadertoy-media-files/
+- https://surma.dev/things/webgpu/#textures
+- https://developer.mozilla.org/en-US/docs/Web/API/GPUDevice/createTexture
+- https://developer.mozilla.org/en-US/docs/Web/API/GPUDevice/createSampler
+- https://www.naiveui.com/en-US/os-theme/docs/introduction
