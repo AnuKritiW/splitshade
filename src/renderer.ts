@@ -14,6 +14,20 @@ fn main(@builtin(vertex_index) vertexIndex : u32) -> @builtin(position) vec4<f32
 }
 `;
 
+const injectedHeader = `
+@group(0) @binding(0) var<uniform> iResolution: vec3<f32>;
+@group(0) @binding(1) var<uniform> iTime: f32;
+@group(0) @binding(2) var<uniform> iMouse: vec4<f32>;
+@group(0) @binding(3) var iChannel0: texture_2d<f32>;
+@group(0) @binding(4) var iChannel0Sampler: sampler;
+@group(0) @binding(5) var iChannel1: texture_2d<f32>;
+@group(0) @binding(6) var iChannel1Sampler: sampler;
+@group(0) @binding(7) var iChannel2: texture_2d<f32>;
+@group(0) @binding(8) var iChannel2Sampler: sampler;
+@group(0) @binding(9) var iChannel3: texture_2d<f32>;
+@group(0) @binding(10) var iChannel3Sampler: sampler;
+`;
+
 function configureCanvasContext(canvas: HTMLCanvasElement, device: GPUDevice) {
   const context = canvas.getContext("webgpu") as GPUCanvasContext;
   const format = navigator.gpu.getPreferredCanvasFormat();
@@ -259,7 +273,8 @@ export async function initWebGPU(
     const vertexModule = device.createShaderModule({
       code: fullscreenVertexWGSL,
     });
-    const fragmentModule = await compileShaderModule(device, shaderCode, output);
+    const fullShaderCode = injectedHeader + '\n' + shaderCode;
+    const fragmentModule = await compileShaderModule(device, fullShaderCode, output);
     if (!fragmentModule) return;
 
     if (!selectedTextures.iChannel0) return output("No texture provided for iChannel0");
