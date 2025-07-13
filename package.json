@@ -1,12 +1,14 @@
 {
   "name": "splitshade-webgpu-playground",
+  "homepage": "https://anukritiw.github.io/splitshade",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "gh-pages -d docs"
   },
   "dependencies": {
     "@fontsource/lato": "^5.2.6",
@@ -19,6 +21,7 @@
     "@vitejs/plugin-vue": "^5.2.3",
     "@vue/tsconfig": "^0.7.0",
     "@webgpu/types": "^0.1.63",
+    "gh-pages": "^6.3.0",
     "naive-ui": "^2.42.0",
     "typescript": "~5.8.3",
     "vfonts": "^0.0.3",

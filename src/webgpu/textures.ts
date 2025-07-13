@@ -1,5 +1,3 @@
-import { getWebGPUDevice } from './context';
-
 /**
  * loadDefaultTexture loads a default texture and sampler for use in WebGPU shaders.
  * It fetches an image, converts it to a GPU texture, and creates a sampler.
