@@ -108,8 +108,8 @@ const allTextures = computed(() =>
           embedded
           class="resources-card"
         >
-          <!-- <n-tabs type="segment" animated> -->
-            <!-- <n-tab-pane name="textures" tab="Textures"> -->
+          <n-tabs type="segment" animated>
+            <n-tab-pane name="textures" tab="Textures">
               <div class="texture-buttons">
                 <n-button
                   v-for="channel in channelList"
@@ -130,12 +130,12 @@ const allTextures = computed(() =>
                   </template>
                 </n-button>
               </div>
-            <!-- </n-tab-pane> -->
+            </n-tab-pane>
 
-            <!-- <n-tab-pane name="mesh" tab="Mesh"> -->
+            <n-tab-pane name="mesh" tab="Mesh">
               <!-- Empty for now -->
-            <!-- </n-tab-pane> -->
-          <!-- </n-tabs> -->
+            </n-tab-pane>
+          </n-tabs>
             <n-modal v-model:show="showTextureModal">
               <n-card title="Select or Upload Texture" style="width: 600px">
                 <div class="thumbnail-grid" style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
