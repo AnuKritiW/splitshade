@@ -11,11 +11,11 @@ export function parseWGSL(wgslCode: string) {
 
     if (hasFragment) {
       return {
-        type: 'fragment-only',
-        entryPoints: entries.fragment,
+        type: hasVertex ? 'vertex-fragment' : 'fragment-only',
+        entryPoints: entries,
         valid: true,
         warnings: [
-          ...(hasVertex ? ['Note: vertex shader detected but ignored.'] : []),
+          ...(hasVertex && !hasFragment ? ['Note: vertex shader detected but no fragment.'] : []),
           ...(hasCompute ? ['Note: compute shader detected but ignored.'] : []),
         ],
       };

@@ -55,20 +55,21 @@ async function compileShaderModule(device: GPUDevice, code: string, output: (msg
   return module;
 }
 
-function createFullscreenPipeline(
+function createPipeline(
   device: GPUDevice,
   vertexModule: GPUShaderModule,
   fragmentModule: GPUShaderModule,
   fragmentEntryPoint: string,
   format: GPUTextureFormat,
-  layout: GPUPipelineLayout
+  layout: GPUPipelineLayout,
+  vertexEntryPoint: string
 ) {
-  // Create render pipeline using fullscreen triangle
+  // Create render pipeline
   return device.createRenderPipeline({
     layout,
     vertex: {
       module: vertexModule,
-      entryPoint: "main",
+      entryPoint: vertexEntryPoint,
     },
     fragment: {
       module: fragmentModule,
@@ -269,13 +270,30 @@ export async function initWebGPU(
       return;
     }
 
-    // Compile fragment and hardcoded vertex shader
-    const vertexModule = device.createShaderModule({
-      code: fullscreenVertexWGSL,
-    });
-    const fullShaderCode = injectedHeader + '\n' + shaderCode;
-    const fragmentModule = await compileShaderModule(device, fullShaderCode, output);
-    if (!fragmentModule) return;
+    let fullShaderCode = injectedHeader + '\n' + shaderCode;
+    let vertexEntry = "main";
+    let vertexModule: GPUShaderModule | null = null;
+
+    const fragmentEntry = parsedCode.entryPoints.fragment[0].name;
+    let fragmentModule: GPUShaderModule | null = null;
+
+    if (parsedCode.type === "vertex-fragment") {
+      vertexEntry = parsedCode.entryPoints.vertex[0].name;
+
+      const shaderModule = await compileShaderModule(device, fullShaderCode, output);
+      if (!shaderModule) return;
+
+      vertexModule = shaderModule;
+      fragmentModule = shaderModule;
+    } else {
+      // No vertex shader provided — prepend fullscreen triangle vertex
+      fullShaderCode = fullscreenVertexWGSL + '\n' + fullShaderCode;
+      vertexModule = await compileShaderModule(device, fullscreenVertexWGSL, output);
+      if (!vertexModule) return;
+
+      fragmentModule = await compileShaderModule(device, fullShaderCode, output);
+      if (!fragmentModule) return;
+    }
 
     if (!selectedTextures.iChannel0) return output("No texture provided for iChannel0");
 
@@ -300,7 +318,15 @@ export async function initWebGPU(
     const pipelineLayout = device.createPipelineLayout({
       bindGroupLayouts: [bindGroupLayout],
     });
-    const pipeline = createFullscreenPipeline(device, vertexModule, fragmentModule, parsedCode.entryPoints[0].name, format, pipelineLayout);
+    const pipeline = createPipeline(
+      device,
+      vertexModule,
+      fragmentModule,
+      fragmentEntry,
+      format,
+      pipelineLayout,
+      vertexEntry
+    );
 
     function frame() {
       if (!device) return;
