@@ -73,6 +73,22 @@ const allTextures = computed(() =>
   DEFAULT_TEXTURES.map(tex => tex.path).concat(uploadedTextures.value)
 )
 
+const uploadedMesh = reactive({
+  name: '',
+  content: '' // this will store raw .obj text for now
+})
+
+function handleMeshUpload({ file, onFinish }: any) {
+  const reader = new FileReader()
+  reader.onload = () => {
+    uploadedMesh.name = file.name
+    uploadedMesh.content = reader.result as string
+    onFinish()
+    console.log("Loaded OBJ content:", uploadedMesh.content.slice(0, 200), "...")
+  }
+  reader.readAsText(file.file)
+}
+
 </script>
 
 <template>
@@ -133,7 +149,17 @@ const allTextures = computed(() =>
             </n-tab-pane>
 
             <n-tab-pane name="mesh" tab="Mesh">
-              <!-- Empty for now -->
+              <n-upload
+                accept=".obj"
+                :custom-request="handleMeshUpload"
+                :show-file-list="false"
+              >
+                <n-button block>Upload .OBJ Mesh</n-button>
+              </n-upload>
+
+              <div v-if="uploadedMesh.name" style="margin-top: 8px; color: white;">
+                <p><strong>Uploaded:</strong> {{ uploadedMesh.name }}</p>
+              </div>
             </n-tab-pane>
           </n-tabs>
             <n-modal v-model:show="showTextureModal">
