@@ -4,7 +4,7 @@ import { ref, reactive, computed } from 'vue'
 const code = ref(`// Write your WGSL code here`)
 
 import { DEFAULT_TEXTURES } from './webgpu/textures'
-import { initWebGPU } from './renderer'
+import { initWebGPU } from './webgpu/renderer'
 
 import { VueMonacoEditor, loader } from '@guolao/vue-monaco-editor'
 loader.config({

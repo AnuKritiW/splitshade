@@ -1,9 +1,9 @@
-import { parseWGSL } from './webgpu/parser';
-import { loadDefaultTexture } from './webgpu/textures';
-import { getWebGPUDevice, configureCanvasContext } from './webgpu/context';
-import { fullscreenVertexWGSL, injectedHeader, compileShaderModule } from './webgpu/shaders';
-import { createUniforms } from './webgpu/uniforms';
-import { createPipeline } from './webgpu/pipeline';
+import { parseWGSL } from './parser';
+import { loadDefaultTexture } from './textures';
+import { getWebGPUDevice, configureCanvasContext } from './context';
+import { fullscreenVertexWGSL, injectedHeader, compileShaderModule } from './shaders';
+import { createUniforms } from './uniforms';
+import { createPipeline } from './pipeline';
 
 function runRenderPass(
   device: GPUDevice,
