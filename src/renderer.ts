@@ -1,86 +1,9 @@
 import { parseWGSL } from './webgpu/parser';
 import { loadDefaultTexture } from './webgpu/textures';
-import { getWebGPUDevice } from './webgpu/context';
-
-const fullscreenVertexWGSL = `
-@vertex
-fn main(@builtin(vertex_index) vertexIndex : u32) -> @builtin(position) vec4<f32> {
-  var pos = array<vec2<f32>, 3>(
-    vec2<f32>(-1.0, -3.0),
-    vec2<f32>(3.0, 1.0),
-    vec2<f32>(-1.0, 1.0)
-  );
-  return vec4<f32>(pos[vertexIndex], 0.0, 1.0);
-}
-`;
-
-const injectedHeader = `
-@group(0) @binding(0) var<uniform> iResolution: vec3<f32>;
-@group(0) @binding(1) var<uniform> iTime: f32;
-@group(0) @binding(2) var<uniform> iMouse: vec4<f32>;
-@group(0) @binding(3) var iChannel0: texture_2d<f32>;
-@group(0) @binding(4) var iChannel0Sampler: sampler;
-@group(0) @binding(5) var iChannel1: texture_2d<f32>;
-@group(0) @binding(6) var iChannel1Sampler: sampler;
-@group(0) @binding(7) var iChannel2: texture_2d<f32>;
-@group(0) @binding(8) var iChannel2Sampler: sampler;
-@group(0) @binding(9) var iChannel3: texture_2d<f32>;
-@group(0) @binding(10) var iChannel3Sampler: sampler;
-`;
-
-function configureCanvasContext(canvas: HTMLCanvasElement, device: GPUDevice) {
-  const context = canvas.getContext("webgpu") as GPUCanvasContext;
-  const format = navigator.gpu.getPreferredCanvasFormat();
-  context.configure({
-    device,
-    format,
-    alphaMode: "opaque",
-  });
-  return { context, format };
-}
-
-async function compileShaderModule(device: GPUDevice, code: string, output: (msg: string) => void) {
-  const module = device.createShaderModule({ code });
-
-  // Get diagnostic info
-  const info = await module.getCompilationInfo();
-  if (info.messages.length > 0) {
-    const formatted = info.messages.map(m => {
-      const where = `L${m.lineNum}:${m.linePos}`;
-      return `[${m.type}] ${where} ${m.message}`;
-    }).join("\n");
-    output(formatted);
-    if (info.messages.some(m => m.type === "error")) return null;
-  }
-  return module;
-}
-
-function createPipeline(
-  device: GPUDevice,
-  vertexModule: GPUShaderModule,
-  fragmentModule: GPUShaderModule,
-  fragmentEntryPoint: string,
-  format: GPUTextureFormat,
-  layout: GPUPipelineLayout,
-  vertexEntryPoint: string
-) {
-  // Create render pipeline
-  return device.createRenderPipeline({
-    layout,
-    vertex: {
-      module: vertexModule,
-      entryPoint: vertexEntryPoint,
-    },
-    fragment: {
-      module: fragmentModule,
-      entryPoint: fragmentEntryPoint,
-      targets: [{ format }],
-    },
-    primitive: {
-      topology: "triangle-list",
-    },
-  });
-}
+import { getWebGPUDevice, configureCanvasContext } from './webgpu/context';
+import { fullscreenVertexWGSL, injectedHeader, compileShaderModule } from './webgpu/shaders';
+import { createUniforms } from './webgpu/uniforms';
+import { createPipeline } from './webgpu/pipeline';
 
 function runRenderPass(
   device: GPUDevice,
@@ -110,106 +33,6 @@ function runRenderPass(
   device.queue.writeBuffer(timeBuffer, 0, new Float32Array([elapsed]));
 
   device.queue.submit([encoder.finish()]);
-}
-
-function createUniforms(
-  device: GPUDevice,
-  canvas: HTMLCanvasElement,
-  textureBindings: ({ textureView: GPUTextureView; sampler: GPUSampler } | null)[]
-)
-{
-  const resolutionData = new Float32Array([
-    canvas.width,
-    canvas.height,
-    1.0,
-  ]);
-
-  const timeData = new Float32Array([0.0]); // will update every frame
-
-  const mouseData = new Float32Array([0.0, 0.0, 0.0, 0.0]);
-
-  const resolutionBuffer = device.createBuffer({
-    size: resolutionData.byteLength,
-    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-  });
-
-  const timeBuffer = device.createBuffer({
-    size: timeData.byteLength,
-    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-  });
-
-  const mouseBuffer = device.createBuffer({
-    size: mouseData.byteLength,
-    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-  });
-
-  device.queue.writeBuffer(resolutionBuffer, 0, resolutionData);
-  device.queue.writeBuffer(timeBuffer, 0, timeData);
-  device.queue.writeBuffer(mouseBuffer, 0, mouseData);
-
-  const layoutEntries: GPUBindGroupLayoutEntry[] = [
-      {
-        binding: 0,
-        visibility: GPUShaderStage.FRAGMENT,
-        buffer: { type: "uniform" }
-      },
-      {
-        binding: 1,
-        visibility: GPUShaderStage.FRAGMENT,
-        buffer: { type: "uniform" }
-      },
-      {
-        binding: 2,
-        visibility: GPUShaderStage.FRAGMENT,
-        buffer: { type: "uniform" }
-      }
-    ];
-
-  textureBindings.forEach((binding, i) => {
-    if (!binding) return;
-    const base = 3 + i * 2;
-    layoutEntries.push({
-      binding: base,
-      visibility: GPUShaderStage.FRAGMENT,
-      texture: { sampleType: 'float' }
-    });
-    layoutEntries.push({
-      binding: base + 1,
-      visibility: GPUShaderStage.FRAGMENT,
-      sampler: { type: 'filtering' }
-    });
-  });
-
-  const bindGroupLayout = device.createBindGroupLayout({
-    entries: layoutEntries,
-  });
-
-  const entries: GPUBindGroupEntry[] = [
-    { binding: 0, resource: { buffer: resolutionBuffer } },
-    { binding: 1, resource: { buffer: timeBuffer } },
-    { binding: 2, resource: { buffer: mouseBuffer } }
-  ];
-
-  textureBindings.forEach((binding, i) => {
-    if (!binding) return;
-    const base = 3 + i * 2;
-    entries.push({
-      binding: base,
-      resource: binding.textureView,
-    });
-    entries.push({
-      binding: base + 1,
-      resource: binding.sampler,
-    });
-  });
-
-  const bindGroup = device.createBindGroup({
-    layout: bindGroupLayout,
-    entries,
-  });
-
-  return { bindGroupLayout, bindGroup,
-           timeBuffer, startTime: performance.now(), mouseBuffer};
 }
 
 // TODO: check where we are logging direct to console versus output()
@@ -255,39 +78,31 @@ export async function initWebGPU(
     const parsedCode = parseWGSL(shaderCode);
     output(`Detected shader type: ${parsedCode.type}`);
 
-    if (!parsedCode.valid) {
-      // log the most relevant error message
-      output(parsedCode.message || parsedCode.error || 'Invalid shader.');
-      return;
-    }
+    // log the most relevant error message
+    if (!parsedCode.valid) return output(parsedCode.message || parsedCode.error || 'Invalid shader.');
+    parsedCode.warnings?.forEach(output);
 
-    if (parsedCode.warnings?.length) {
-      parsedCode.warnings.forEach(output);
-    }
-
-    if (!parsedCode.entryPoints || parsedCode.entryPoints.length === 0) {
-      console.error("No entry points found in shader code.");
-      return;
-    }
+    if (!parsedCode.entryPoints || parsedCode.entryPoints.length === 0)
+      return console.error("No entry points found in shader code.");
 
     let fullShaderCode = injectedHeader + '\n' + shaderCode;
-    let vertexEntry = "main";
-    let vertexModule: GPUShaderModule | null = null;
 
+    let vertexEntry = "main";
     const fragmentEntry = parsedCode.entryPoints.fragment[0].name;
+
+    let vertexModule: GPUShaderModule | null = null;
     let fragmentModule: GPUShaderModule | null = null;
+    let shaderModule: GPUShaderModule | null = null;
 
     if (parsedCode.type === "vertex-fragment") {
       vertexEntry = parsedCode.entryPoints.vertex[0].name;
-
-      const shaderModule = await compileShaderModule(device, fullShaderCode, output);
+      shaderModule = await compileShaderModule(device, fullShaderCode, output);
       if (!shaderModule) return;
 
       vertexModule = shaderModule;
       fragmentModule = shaderModule;
+
     } else {
-      // No vertex shader provided — prepend fullscreen triangle vertex
-      fullShaderCode = fullscreenVertexWGSL + '\n' + fullShaderCode;
       vertexModule = await compileShaderModule(device, fullscreenVertexWGSL, output);
       if (!vertexModule) return;
 
@@ -304,11 +119,9 @@ export async function initWebGPU(
       })
     );
 
-    // const { textureView, sampler } = await loadDefaultTexture(device, selectedTextures.iChannel0);
-
     // Create iResolution uniform (vec3<f32>: width, height, 1.0)
     // Create iTime uniform (f32: 0.0)
-    const { bindGroupLayout, bindGroup, timeBuffer, startTime, mouseBuffer } = createUniforms(device, canvas, textureBindings); //textureView, sampler);
+    const { bindGroupLayout, bindGroup, timeBuffer, startTime, mouseBuffer } = createUniforms(device, canvas, textureBindings);
 
     // catch any validation errors that happen in this scope
     // this is useful for catching shader compilation errors
@@ -349,11 +162,8 @@ export async function initWebGPU(
 
     // Pop error scope
     const error = await device.popErrorScope();
-    if (error) {
-      output(`WebGPU Error: ${error.message}`);
-    } else {
-      output(`Shader compiled and executed successfully.`);
-    }
+    if (error) output(`WebGPU Error: ${error.message}`);
+    else output(`Shader compiled and executed successfully.`);
 
   } catch (err: any) {
     output(`Caught Exception: ${err.message || err}`);
