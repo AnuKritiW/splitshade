@@ -36,17 +36,17 @@ export function createUniforms(
   const layoutEntries: GPUBindGroupLayoutEntry[] = [
       {
         binding: 0,
-        visibility: GPUShaderStage.FRAGMENT,
+        visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.VERTEX,
         buffer: { type: "uniform" }
       },
       {
         binding: 1,
-        visibility: GPUShaderStage.FRAGMENT,
+        visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.VERTEX,
         buffer: { type: "uniform" }
       },
       {
         binding: 2,
-        visibility: GPUShaderStage.FRAGMENT,
+        visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.VERTEX,
         buffer: { type: "uniform" }
       }
   ];
@@ -56,12 +56,12 @@ export function createUniforms(
     const base = 3 + i * 2;
     layoutEntries.push({
       binding: base,
-      visibility: GPUShaderStage.FRAGMENT,
+      visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.VERTEX,
       texture: { sampleType: 'float' }
     });
     layoutEntries.push({
       binding: base + 1,
-      visibility: GPUShaderStage.FRAGMENT,
+      visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.VERTEX,
       sampler: { type: 'filtering' }
     });
   });

@@ -11,7 +11,9 @@ function runRenderPass(
   pipeline: GPURenderPipeline,
   bindGroup: GPUBindGroup,
   timeBuffer: GPUBuffer,
-  startTime: number
+  startTime: number,
+  vertexBuffer: GPUBuffer | null = null,
+  vertexData: Float32Array | null = null
 ) {
   // Encode commands
   const encoder = device.createCommandEncoder();
@@ -26,7 +28,13 @@ function runRenderPass(
 
   pass.setPipeline(pipeline);
   pass.setBindGroup(0, bindGroup); // injects iResolution uniform
-  pass.draw(3); // Fullscreen triangle
+  if (vertexBuffer && vertexData) {
+    pass.setVertexBuffer(0, vertexBuffer)
+    pass.draw(vertexData.length / 6, 1, 0, 0) // 6 floats per vertex (vec3 pos + vec3 color)
+  } else {
+    pass.draw(3, 1, 0, 0) // Fullscreen triangle fallback
+  }
+  // pass.draw(3); // Fullscreen triangle
   pass.end();
 
   const elapsed = (performance.now() - startTime) / 1000.0;
@@ -45,7 +53,8 @@ export async function initWebGPU(
     iChannel2: string | null;
     iChannel3: string | null;
   },
-  onConsoleOutput?: (msg: string) => void
+  onConsoleOutput?: (msg: string) => void,
+  vertexData: Float32Array | null = null
 ) {
   const output = (msg: string) => {
     if (onConsoleOutput) onConsoleOutput(msg); // log to browser console
@@ -57,6 +66,20 @@ export async function initWebGPU(
   try {
     const { device, adapter } = await getWebGPUDevice();
     if (!device || !adapter) return;
+
+    let vertexBuffer: GPUBuffer | null = null
+
+    if (vertexData) {
+      vertexBuffer = device.createBuffer({
+        size: vertexData.byteLength,
+        usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+        mappedAtCreation: true
+      })
+
+      const arrayBuffer = vertexBuffer.getMappedRange()
+      new Float32Array(arrayBuffer).set(vertexData)
+      vertexBuffer.unmap()
+    }
 
     const { context, format } = configureCanvasContext(canvas, device);
 
@@ -82,7 +105,7 @@ export async function initWebGPU(
     if (!parsedCode.valid) return output(parsedCode.message || parsedCode.error || 'Invalid shader.');
     parsedCode.warnings?.forEach(output);
 
-    if (!parsedCode.entryPoints || parsedCode.entryPoints.length === 0)
+    if (!parsedCode.entryPoints || Object.values(parsedCode.entryPoints).every(arr => !arr?.length))
       return console.error("No entry points found in shader code.");
 
     let fullShaderCode = injectedHeader + '\n' + shaderCode;
@@ -138,7 +161,8 @@ export async function initWebGPU(
       fragmentEntry,
       format,
       pipelineLayout,
-      vertexEntry
+      vertexEntry,
+      !!vertexData // boolean flag to toggle vertex input
     );
 
     function frame() {
@@ -155,7 +179,7 @@ export async function initWebGPU(
       ]);
       device.queue.writeBuffer(mouseBuffer, 0, mouseVec4);
 
-      runRenderPass(device, context, pipeline, bindGroup, timeBuffer, startTime);
+      runRenderPass(device, context, pipeline, bindGroup, timeBuffer, startTime, vertexBuffer, vertexData);
       requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);

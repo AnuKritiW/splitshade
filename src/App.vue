@@ -5,6 +5,7 @@ const code = ref(`// Write your WGSL code here`)
 
 import { DEFAULT_TEXTURES } from './webgpu/textures'
 import { initWebGPU } from './webgpu/renderer'
+import { parseObjToVertices } from './utils/objParser'
 
 import { VueMonacoEditor, loader } from '@guolao/vue-monaco-editor'
 loader.config({
@@ -32,11 +33,16 @@ function runShader() {
 
   // consoleOutput.value = "Compiled successfully, running shader..."
   consoleOutput.value = ""
-  initWebGPU(canvasRef.value, code.value, selectedTextures, (msg) => {
-    consoleOutput.value += (msg || "Compiled successfully") + '\n'
-  })
+  initWebGPU(
+    canvasRef.value,
+    code.value,
+    selectedTextures,
+    (msg) => {
+      consoleOutput.value += (msg || "Compiled successfully") + '\n'
+    },
+    uploadedMesh.vertexData // vertex buffer or null
+  )
 }
-
 
 const showTextureModal = ref(false)
 const activeChannel = ref('')
@@ -75,14 +81,43 @@ const allTextures = computed(() =>
 
 const uploadedMesh = reactive({
   name: '',
-  content: '' // this will store raw .obj text for now
+  content: '',                            // raw .obj text
+  vertexData: null as Float32Array | null // parsed vertex buffer
 })
 
 function handleMeshUpload({ file, onFinish }: any) {
   const reader = new FileReader()
   reader.onload = () => {
+    const objText = reader.result as string
     uploadedMesh.name = file.name
-    uploadedMesh.content = reader.result as string
+    uploadedMesh.content = objText
+    try {
+      uploadedMesh.vertexData = parseObjToVertices(objText)
+      console.log("Parsed vertex count:", uploadedMesh.vertexData.length / 6)
+      // Optional: prefill editor with vertex+fragment shader
+      code.value = `
+struct VertexOut {
+  @builtin(position) position: vec4<f32>,
+  @location(0) color: vec3<f32>,
+};
+
+@vertex
+fn main(@location(0) pos: vec3<f32>, @location(1) color: vec3<f32>) -> VertexOut {
+  var out: VertexOut;
+  out.position = vec4<f32>(pos, 1.0);
+  out.color = color;
+  return out;
+}
+
+@fragment
+fn main_fs(@location(0) color: vec3<f32>) -> @location(0) vec4<f32> {
+  return vec4<f32>(color, 1.0);
+}
+`.trim()
+      runShader()
+    } catch (e) {
+      console.error("OBJ parsing failed:", e)
+    }
     onFinish()
     console.log("Loaded OBJ content:", uploadedMesh.content.slice(0, 200), "...")
   }
