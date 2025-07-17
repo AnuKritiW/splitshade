@@ -14,7 +14,6 @@ loader.config({
   },
 })
 
-const addStarterMeshUploadCode = ref(false)
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 const consoleOutput = ref("")
 const selectedTextures = reactive({
@@ -86,7 +85,26 @@ const uploadedMesh = reactive({
   vertexData: null as Float32Array | null // parsed vertex buffer
 })
 
-const defaultCode = `
+function handleMeshUpload({ file, onFinish }: any) {
+  const reader = new FileReader()
+  reader.onload = () => {
+    const objText = reader.result as string
+    uploadedMesh.name = file.name
+    uploadedMesh.content = objText
+    try {
+      uploadedMesh.vertexData = parseObjToVertices(objText)
+      console.log("Parsed vertex count:", uploadedMesh.vertexData.length / 6)
+    } catch (e) {
+      console.error("OBJ parsing failed:", e)
+    }
+    onFinish()
+    console.log("Loaded OBJ content:", uploadedMesh.content.slice(0, 200), "...")
+  }
+  reader.readAsText(file.file)
+}
+
+function copyStarterCode() {
+  const defaultCode = `
 // Default shader code for uploaded mesh
 struct VertexOut {
   @builtin(position) position: vec4<f32>,
@@ -107,39 +125,6 @@ fn main_fs(@location(0) color: vec3<f32>) -> @location(0) vec4<f32> {
 }
 `.trim()
 
-function handleMeshUpload({ file, onFinish }: any) {
-  const reader = new FileReader()
-  reader.onload = () => {
-    const objText = reader.result as string
-    uploadedMesh.name = file.name
-    uploadedMesh.content = objText
-    try {
-      uploadedMesh.vertexData = parseObjToVertices(objText)
-      console.log("Parsed vertex count:", uploadedMesh.vertexData.length / 6)
-
-      // prefill editor with vertex+fragment shader
-      if (addStarterMeshUploadCode.value) {
-        if (!code.value || code.value.trim() === '' || code.value.includes('// Write your WGSL code here')) {
-          code.value = defaultCode
-        } else {
-          const commentedDefault = defaultCode
-            .split('\n')
-            .map(line => '// ' + line)
-            .join('\n')
-          code.value += '\n\n// ---- Default Mesh Shader Example ----\n' + commentedDefault
-        }
-      }
-      runShader()
-    } catch (e) {
-      console.error("OBJ parsing failed:", e)
-    }
-    onFinish()
-    console.log("Loaded OBJ content:", uploadedMesh.content.slice(0, 200), "...")
-  }
-  reader.readAsText(file.file)
-}
-
-function copyStarterCode() {
   navigator.clipboard.writeText(defaultCode)
     .then(() => console.log("Starter code copied to clipboard"))
     .catch(err => console.error("Failed to copy:", err))
@@ -239,15 +224,8 @@ function removeMesh() {
               <!-- this lives outside the inline-flex container so the checkbox appears below -->
               <div style="margin-top:12px; display: flex; align-items: center; gap: 12px;">
                 <n-button ghost size="small" @click="copyStarterCode">
-                  Copy Starter Mesh Shader
+                  Copy Starter Mesh Code
                 </n-button>
-
-                <n-checkbox
-                  v-model:checked="addStarterMeshUploadCode"
-                  style="color:white"
-                >
-                  Add starter mesh upload code on upload
-                </n-checkbox>
               </div>
             </n-tab-pane>
 
