@@ -139,6 +139,12 @@ fn main_fs(@location(0) color: vec3<f32>) -> @location(0) vec4<f32> {
   reader.readAsText(file.file)
 }
 
+function removeMesh() {
+  uploadedMesh.name = ''
+  uploadedMesh.content = ''
+  uploadedMesh.vertexData = null
+}
+
 </script>
 
 <template>
@@ -210,9 +216,18 @@ fn main_fs(@location(0) color: vec3<f32>) -> @location(0) vec4<f32> {
                   <n-button>Upload .OBJ Mesh</n-button>
                 </n-upload>
 
-                <span v-if="uploadedMesh.name" style="color:white; white-space:nowrap;">
+                <n-button
+                  :disabled="!uploadedMesh.name"
+                  tag="div"
+                  type="error"
+                  @click="removeMesh"
+                >
+                  Remove {{ uploadedMesh.name ? uploadedMesh.name : '.OBJ Mesh' }}
+                </n-button>
+
+                <!-- <span v-if="uploadedMesh.name" style="color:white; white-space:nowrap;">
                   <strong>Uploaded:</strong> {{ uploadedMesh.name }}
-                </span>
+                </span> -->
               </div>
 
               <!-- this lives outside the inline-flex container so the checkbox appears below -->
