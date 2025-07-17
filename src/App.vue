@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { darkTheme } from 'naive-ui'
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, h } from 'vue'
 const code = ref(`// Write your WGSL code here`)
 
 import { DEFAULT_TEXTURES } from './webgpu/textures'
@@ -8,6 +8,9 @@ import { initWebGPU } from './webgpu/renderer'
 import { parseObjToVertices } from './utils/objParser'
 
 import { VueMonacoEditor, loader } from '@guolao/vue-monaco-editor'
+import { NIcon } from 'naive-ui'
+import { ClipboardOutline } from '@vicons/ionicons5'
+
 loader.config({
   paths: {
     vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs',
@@ -136,6 +139,12 @@ function removeMesh() {
   uploadedMesh.vertexData = null
 }
 
+function renderClipboardIcon() {
+  return h(NIcon, null, {
+    default: () => h(ClipboardOutline)
+  })
+}
+
 </script>
 
 <template>
@@ -223,10 +232,11 @@ function removeMesh() {
 
               <!-- this lives outside the inline-flex container so the checkbox appears below -->
               <div style="margin-top:12px; display: flex; align-items: center; gap: 12px;">
-                <n-button ghost size="small" @click="copyStarterCode">
-                  Copy Starter Mesh Code
+                <n-button ghost size="small" @click="copyStarterCode" :render-icon="renderClipboardIcon">
+                  Copy Starter Shader
                 </n-button>
               </div>
+
             </n-tab-pane>
 
           </n-tabs>
