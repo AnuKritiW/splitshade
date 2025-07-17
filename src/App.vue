@@ -199,26 +199,33 @@ fn main_fs(@location(0) color: vec3<f32>) -> @location(0) vec4<f32> {
             </n-tab-pane>
 
             <n-tab-pane name="mesh" tab="Mesh">
-              <n-upload
-                accept=".obj"
-                :custom-request="handleMeshUpload"
-                :show-file-list="false"
-              >
-                <n-button block>Upload .OBJ Mesh</n-button>
-              </n-upload>
+              <!-- only this wrapper is inline-flex -->
+              <div style="display:inline-flex; align-items:center; gap:8px; margin-top:8px;">
+                <n-upload
+                  accept=".obj"
+                  :custom-request="handleMeshUpload"
+                  :show-file-list="false"
+                  style="display:inline-block;"
+                >
+                  <n-button>Upload .OBJ Mesh</n-button>
+                </n-upload>
 
-              <div v-if="uploadedMesh.name" style="margin-top: 8px; color: white;">
-                <p><strong>Uploaded:</strong> {{ uploadedMesh.name }}</p>
+                <span v-if="uploadedMesh.name" style="color:white; white-space:nowrap;">
+                  <strong>Uploaded:</strong> {{ uploadedMesh.name }}
+                </span>
               </div>
 
-              <n-checkbox
-                v-model:checked="addStarterMeshUploadCode"
-                style="margin-top: 8px; color: white"
-              >
-                Add default shader code for mesh support
-              </n-checkbox>
-
+              <!-- this lives outside the inline-flex container so the checkbox appears below -->
+              <div style="margin-top:12px;">
+                <n-checkbox
+                  v-model:checked="addStarterMeshUploadCode"
+                  style="color:white"
+                >
+                  Add starter mesh upload code
+                </n-checkbox>
+              </div>
             </n-tab-pane>
+
           </n-tabs>
             <n-modal v-model:show="showTextureModal">
               <n-card title="Select or Upload Texture" style="width: 600px">
