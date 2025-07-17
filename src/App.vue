@@ -14,6 +14,7 @@ loader.config({
   },
 })
 
+const addStarterMeshUploadCode = ref(true)
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 const consoleOutput = ref("")
 const selectedTextures = reactive({
@@ -94,8 +95,10 @@ function handleMeshUpload({ file, onFinish }: any) {
     try {
       uploadedMesh.vertexData = parseObjToVertices(objText)
       console.log("Parsed vertex count:", uploadedMesh.vertexData.length / 6)
-      // Optional: prefill editor with vertex+fragment shader
-      code.value = `
+
+      // prefill editor with vertex+fragment shader
+      const defaultCode = `
+// Default shader code for uploaded mesh
 struct VertexOut {
   @builtin(position) position: vec4<f32>,
   @location(0) color: vec3<f32>,
@@ -114,6 +117,18 @@ fn main_fs(@location(0) color: vec3<f32>) -> @location(0) vec4<f32> {
   return vec4<f32>(color, 1.0);
 }
 `.trim()
+
+      if (addStarterMeshUploadCode.value) {
+        if (!code.value || code.value.trim() === '' || code.value.includes('// Write your WGSL code here')) {
+          code.value = defaultCode
+        } else {
+          const commentedDefault = defaultCode
+            .split('\n')
+            .map(line => '// ' + line)
+            .join('\n')
+          code.value += '\n\n// ---- Default Mesh Shader Example ----\n' + commentedDefault
+        }
+      }
       runShader()
     } catch (e) {
       console.error("OBJ parsing failed:", e)
@@ -195,6 +210,14 @@ fn main_fs(@location(0) color: vec3<f32>) -> @location(0) vec4<f32> {
               <div v-if="uploadedMesh.name" style="margin-top: 8px; color: white;">
                 <p><strong>Uploaded:</strong> {{ uploadedMesh.name }}</p>
               </div>
+
+              <n-checkbox
+                v-model:checked="addStarterMeshUploadCode"
+                style="margin-top: 8px; color: white"
+              >
+                Add default shader code for mesh support
+              </n-checkbox>
+
             </n-tab-pane>
           </n-tabs>
             <n-modal v-model:show="showTextureModal">
