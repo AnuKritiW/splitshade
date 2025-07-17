@@ -117,6 +117,7 @@ struct VertexOut {
 @vertex
 fn main(@location(0) pos: vec3<f32>, @location(1) color: vec3<f32>) -> VertexOut {
   var out: VertexOut;
+  // Adjust as needed to ensure the object is in clip space and in front of the camera
   out.position = vec4<f32>(pos, 1.0);
   out.color = color;
   return out;
