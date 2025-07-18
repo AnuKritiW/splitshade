@@ -12,6 +12,7 @@ import { NIcon } from 'naive-ui'
 import { ClipboardOutline, DownloadOutline } from '@vicons/ionicons5'
 
 import ConsolePanel from './components/ConsolePanel.vue'
+import PreviewPanel from './components/PreviewPanel.vue'
 
 loader.config({
   paths: {
@@ -19,7 +20,8 @@ loader.config({
   },
 })
 
-const canvasRef = ref<HTMLCanvasElement | null>(null)
+// const canvasRef = ref<HTMLCanvasElement | null>(null)
+const previewRef = ref<InstanceType<typeof PreviewPanel> | null>(null)
 const consoleOutput = ref("")
 const selectedTextures = reactive({
   iChannel0: null as string | null,
@@ -34,12 +36,12 @@ selectedTextures.iChannel2 = DEFAULT_TEXTURES[2].path
 selectedTextures.iChannel3 = DEFAULT_TEXTURES[3].path
 
 function runShader() {
-  if (!canvasRef.value || !selectedTextures) return;
+  if (!previewRef.value?.canvasRef || !selectedTextures) return;
 
   // consoleOutput.value = "Compiled successfully, running shader..."
   consoleOutput.value = ""
   initWebGPU(
-    canvasRef.value,
+    previewRef.value.canvasRef,
     code.value,
     selectedTextures,
     (msg) => {
@@ -209,9 +211,7 @@ function downloadMesh(meshName: string) {
         </n-card>
 
         <!-- Preview (top-right) -->
-        <n-card title="Preview" size="small" class="panel" style="grid-row: 1; grid-column: 2;">
-          <canvas ref="canvasRef" id="gfx" style="width: 100%; height: 100%;"></canvas>
-        </n-card>
+         <PreviewPanel ref="previewRef" style="grid-row: 1; grid-column: 2;" />
 
         <!-- Textures (bottom-left) -->
         <n-card
@@ -385,13 +385,6 @@ html, body, #app, .n-layout {
   background-color: #101014;
   box-sizing: border-box;
   height: 100%; /* fill the minmax row */
-}
-
-.panel {
-  background-color: #1a1a1a;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
 }
 
 .editor {
