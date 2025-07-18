@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import { darkTheme } from 'naive-ui'
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, h } from 'vue'
 const code = ref(`// Write your WGSL code here`)
 
 import { DEFAULT_TEXTURES } from './webgpu/textures'
-import { initWebGPU } from './renderer'
+import { initWebGPU } from './webgpu/renderer'
+import { parseObjToVertices } from './utils/objParser'
 
 import { VueMonacoEditor, loader } from '@guolao/vue-monaco-editor'
+import { NIcon } from 'naive-ui'
+import { ClipboardOutline, DownloadOutline } from '@vicons/ionicons5'
+
 loader.config({
   paths: {
     vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs',
@@ -32,11 +36,16 @@ function runShader() {
 
   // consoleOutput.value = "Compiled successfully, running shader..."
   consoleOutput.value = ""
-  initWebGPU(canvasRef.value, code.value, selectedTextures, (msg) => {
-    consoleOutput.value += (msg || "Compiled successfully") + '\n'
-  })
+  initWebGPU(
+    canvasRef.value,
+    code.value,
+    selectedTextures,
+    (msg) => {
+      consoleOutput.value += (msg || "Compiled successfully") + '\n'
+    },
+    uploadedMesh.vertexData // vertex buffer or null
+  )
 }
-
 
 const showTextureModal = ref(false)
 const activeChannel = ref('')
@@ -73,6 +82,107 @@ const allTextures = computed(() =>
   DEFAULT_TEXTURES.map(tex => tex.path).concat(uploadedTextures.value)
 )
 
+const uploadedMesh = reactive({
+  name: '',
+  content: '',                            // raw .obj text
+  vertexData: null as Float32Array | null // parsed vertex buffer
+})
+
+function handleMeshUpload({ file, onFinish }: any) {
+  const reader = new FileReader()
+  reader.onload = () => {
+    const objText = reader.result as string
+    uploadedMesh.name = file.name
+    uploadedMesh.content = objText
+    try {
+      uploadedMesh.vertexData = parseObjToVertices(objText)
+      console.log("Parsed vertex count:", uploadedMesh.vertexData.length / 6)
+    } catch (e) {
+      console.error("OBJ parsing failed:", e)
+    }
+    onFinish()
+    console.log("Loaded OBJ content:", uploadedMesh.content.slice(0, 200), "...")
+  }
+  reader.readAsText(file.file)
+}
+
+function copyStarterCode() {
+  const defaultCode = `
+// Default shader code for uploaded mesh
+struct VertexOut {
+  @builtin(position) position: vec4<f32>,
+  @location(0) color: vec3<f32>,
+};
+
+@vertex
+fn main(@location(0) pos: vec3<f32>, @location(1) color: vec3<f32>) -> VertexOut {
+  var out: VertexOut;
+  // Adjust as needed to ensure the object is in clip space and in front of the camera
+  out.position = vec4<f32>(pos, 1.0);
+  out.color = color;
+  return out;
+}
+
+@fragment
+fn main_fs(@location(0) color: vec3<f32>) -> @location(0) vec4<f32> {
+  return vec4<f32>(color, 1.0);
+}
+`.trim()
+
+  navigator.clipboard.writeText(defaultCode)
+    .then(() => console.log("Starter code copied to clipboard"))
+    .catch(err => console.error("Failed to copy:", err))
+}
+
+function removeMesh() {
+  uploadedMesh.name = ''
+  uploadedMesh.content = ''
+  uploadedMesh.vertexData = null
+}
+
+function renderClipboardIcon() {
+  return h(NIcon, null, {
+    default: () => h(ClipboardOutline)
+  })
+}
+
+const showMeshModal = ref(false)
+
+const presetMeshes = [
+  'triangle.obj',
+  'sphere.obj',
+  'circle.obj'
+]
+
+function openMeshModal() {
+  showMeshModal.value = true
+}
+
+function selectPresetMesh(meshName: string) {
+  fetch(`/splitshade/mesh/${meshName}`)
+    .then(res => res.text())
+    .then(content => {
+      uploadedMesh.name = meshName
+      uploadedMesh.content = content
+      uploadedMesh.vertexData = parseObjToVertices(content)
+      console.log(`Loaded preset mesh: ${meshName}`)
+    })
+    .catch(err => console.error("Failed to load preset mesh:", err))
+
+  showMeshModal.value = false
+}
+
+function downloadMesh(meshName: string) {
+  if (!meshName) return;  // Prevent accidental undefined calls
+  const link = document.createElement('a')
+  link.href = `/splitshade/mesh/${meshName}`
+  link.download = meshName
+  link.style.display = 'none'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
+
 </script>
 
 <template>
@@ -108,8 +218,8 @@ const allTextures = computed(() =>
           embedded
           class="resources-card"
         >
-          <!-- <n-tabs type="segment" animated> -->
-            <!-- <n-tab-pane name="textures" tab="Textures"> -->
+          <n-tabs type="segment" animated>
+            <n-tab-pane name="textures" tab="Textures">
               <div class="texture-buttons">
                 <n-button
                   v-for="channel in channelList"
@@ -130,12 +240,45 @@ const allTextures = computed(() =>
                   </template>
                 </n-button>
               </div>
-            <!-- </n-tab-pane> -->
+            </n-tab-pane>
 
-            <!-- <n-tab-pane name="mesh" tab="Mesh"> -->
-              <!-- Empty for now -->
-            <!-- </n-tab-pane> -->
-          <!-- </n-tabs> -->
+            <n-tab-pane name="mesh" tab="Mesh">
+              <!-- only this wrapper is inline-flex -->
+              <div style="display:inline-flex; align-items:center; gap:8px; margin-top:8px;">
+                <n-button @click="openMeshModal">Select / Upload .OBJ Mesh</n-button>
+                <!-- <n-upload
+                  accept=".obj"
+                  :custom-request="handleMeshUpload"
+                  :show-file-list="false"
+                  style="display:inline-block;"
+                >
+                  <n-button>Upload .OBJ Mesh</n-button>
+                </n-upload> -->
+
+                <n-button
+                  :disabled="!uploadedMesh.name"
+                  tag="div"
+                  type="error"
+                  @click="removeMesh"
+                >
+                  Remove {{ uploadedMesh.name ? uploadedMesh.name : '.OBJ Mesh' }}
+                </n-button>
+
+                <!-- <span v-if="uploadedMesh.name" style="color:white; white-space:nowrap;">
+                  <strong>Uploaded:</strong> {{ uploadedMesh.name }}
+                </span> -->
+              </div>
+
+              <!-- this lives outside the inline-flex container so the checkbox appears below -->
+              <div style="margin-top:12px; display: flex; align-items: center; gap: 12px;">
+                <n-button ghost size="small" @click="copyStarterCode" :render-icon="renderClipboardIcon">
+                  Copy Starter Shader
+                </n-button>
+              </div>
+
+            </n-tab-pane>
+          </n-tabs>
+
             <n-modal v-model:show="showTextureModal">
               <n-card title="Select or Upload Texture" style="width: 600px">
                 <div class="thumbnail-grid" style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
@@ -160,6 +303,49 @@ const allTextures = computed(() =>
                 </n-upload>
               </n-card>
             </n-modal>
+
+            <n-modal v-model:show="showMeshModal">
+              <n-card title="Select or Upload Mesh" style="width: 480px">
+                <div style="margin-bottom: 16px;">
+                  <h4 style="margin: 0 0 8px; color: white;">Preset Meshes:</h4>
+                  <n-space vertical size="small">
+                    <div
+                      v-for="mesh in presetMeshes"
+                      :key="mesh"
+                      style="display: flex; align-items: center; justify-content: space-between;"
+                    >
+                      <n-button
+                        text
+                        style="font-weight: bold;"
+                        @click="selectPresetMesh(mesh)"
+                      >
+                        {{ mesh }}
+                      </n-button>
+
+                      <n-button
+                        text
+                        size="small"
+                        @click="downloadMesh(mesh)"
+                        title="Open raw .obj in new tab"
+                      >
+                        <NIcon size="18">
+                          <DownloadOutline />
+                        </NIcon>
+                      </n-button>
+                    </div>
+                  </n-space>
+                </div>
+
+                <n-upload
+                  accept=".obj"
+                  :custom-request="handleMeshUpload"
+                  :show-file-list="false"
+                >
+                  <n-button block>Upload New .OBJ Mesh</n-button>
+                </n-upload>
+              </n-card>
+            </n-modal>
+
         </n-card>
 
 

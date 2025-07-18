@@ -31,3 +31,14 @@ export async function getWebGPUDevice(): Promise<{ device: GPUDevice | null, ada
   console.log("Got GPU device:", device);
   return { device, adapter };
 }
+
+export function configureCanvasContext(canvas: HTMLCanvasElement, device: GPUDevice) {
+  const context = canvas.getContext("webgpu") as GPUCanvasContext;
+  const format = navigator.gpu.getPreferredCanvasFormat();
+  context.configure({
+    device,
+    format,
+    alphaMode: "opaque",
+  });
+  return { context, format };
+}

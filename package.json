@@ -13,7 +13,9 @@
   "dependencies": {
     "@fontsource/lato": "^5.2.6",
     "@guolao/vue-monaco-editor": "^1.5.5",
+    "@vicons/ionicons5": "^0.13.0",
     "monaco-editor": "^0.52.2",
+    "obj-file-parser": "^0.6.2",
     "vue": "^3.5.13",
     "wgsl_reflect": "^1.2.1"
   },

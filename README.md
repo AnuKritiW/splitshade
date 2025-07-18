@@ -51,6 +51,38 @@ In the future, other sampler types could be supported like:
 - sampler (non-filtering) — for manual mip-level control or compute shaders.
 - sampler_comparison — for depth texture sampling (e.g., shadows).
 
+# Vertex Shader support
+
+```
+// --- Vertex Shader Guide ---
+//
+// If you've uploaded a mesh (.obj), your vertex shader can access its data:
+//
+// Available vertex inputs:
+// - @location(0) position: vec3<f32>   // 3D position from the mesh
+// - @location(1) color: vec3<f32>      // Default white if not provided in .obj
+//
+// You must declare these as parameters to your vertex function, e.g.:
+//
+// @vertex
+// fn main(
+//   @location(0) position: vec3<f32>,
+//   @location(1) color: vec3<f32>
+// ) -> @builtin(position) vec4<f32> {
+//   return vec4<f32>(position, 1.0);
+// }
+//
+// If no mesh is uploaded, fallback fullscreen triangle will render instead.
+```
+
+feat: add optional mesh upload support with vertex buffer integration
+- Accepts .obj mesh uploads and parses into GPU vertex buffers
+- Automatically switches pipeline to use vertex input when mesh is present
+- Adds default mesh-compatible shader code if no code is present
+- Preserves fallback fullscreen triangle rendering when no mesh is uploaded
+- Handles iChannel texture bindings dynamically
+- Includes error handling and fallback logging
+
 # Sources/References
 
 - https://shadertoyunofficial.wordpress.com/2019/07/23/shadertoy-media-files/
@@ -58,3 +90,4 @@ In the future, other sampler types could be supported like:
 - https://developer.mozilla.org/en-US/docs/Web/API/GPUDevice/createTexture
 - https://developer.mozilla.org/en-US/docs/Web/API/GPUDevice/createSampler
 - https://www.naiveui.com/en-US/os-theme/docs/introduction
+- https://web.mit.edu/djwendel/www/weblogo/shapes/basic-shapes/sphere/sphere.obj
