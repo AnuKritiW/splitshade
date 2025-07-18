@@ -9,7 +9,7 @@ import { parseObjToVertices } from './utils/objParser'
 
 import { VueMonacoEditor, loader } from '@guolao/vue-monaco-editor'
 import { NIcon } from 'naive-ui'
-import { ClipboardOutline } from '@vicons/ionicons5'
+import { ClipboardOutline, DownloadOutline } from '@vicons/ionicons5'
 
 loader.config({
   paths: {
@@ -146,6 +146,43 @@ function renderClipboardIcon() {
   })
 }
 
+const showMeshModal = ref(false)
+
+const presetMeshes = [
+  'triangle.obj',
+  'sphere.obj',
+  'circle.obj'
+]
+
+function openMeshModal() {
+  showMeshModal.value = true
+}
+
+function selectPresetMesh(meshName: string) {
+  fetch(`/splitshade/mesh/${meshName}`)
+    .then(res => res.text())
+    .then(content => {
+      uploadedMesh.name = meshName
+      uploadedMesh.content = content
+      uploadedMesh.vertexData = parseObjToVertices(content)
+      console.log(`Loaded preset mesh: ${meshName}`)
+    })
+    .catch(err => console.error("Failed to load preset mesh:", err))
+
+  showMeshModal.value = false
+}
+
+function downloadMesh(meshName: string) {
+  if (!meshName) return;  // Prevent accidental undefined calls
+  const link = document.createElement('a')
+  link.href = `/splitshade/mesh/${meshName}`
+  link.download = meshName
+  link.style.display = 'none'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
+
 </script>
 
 <template>
@@ -208,14 +245,15 @@ function renderClipboardIcon() {
             <n-tab-pane name="mesh" tab="Mesh">
               <!-- only this wrapper is inline-flex -->
               <div style="display:inline-flex; align-items:center; gap:8px; margin-top:8px;">
-                <n-upload
+                <n-button @click="openMeshModal">Select / Upload .OBJ Mesh</n-button>
+                <!-- <n-upload
                   accept=".obj"
                   :custom-request="handleMeshUpload"
                   :show-file-list="false"
                   style="display:inline-block;"
                 >
                   <n-button>Upload .OBJ Mesh</n-button>
-                </n-upload>
+                </n-upload> -->
 
                 <n-button
                   :disabled="!uploadedMesh.name"
@@ -239,8 +277,8 @@ function renderClipboardIcon() {
               </div>
 
             </n-tab-pane>
-
           </n-tabs>
+
             <n-modal v-model:show="showTextureModal">
               <n-card title="Select or Upload Texture" style="width: 600px">
                 <div class="thumbnail-grid" style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
@@ -265,6 +303,49 @@ function renderClipboardIcon() {
                 </n-upload>
               </n-card>
             </n-modal>
+
+            <n-modal v-model:show="showMeshModal">
+              <n-card title="Select or Upload Mesh" style="width: 480px">
+                <div style="margin-bottom: 16px;">
+                  <h4 style="margin: 0 0 8px; color: white;">Preset Meshes:</h4>
+                  <n-space vertical size="small">
+                    <div
+                      v-for="mesh in presetMeshes"
+                      :key="mesh"
+                      style="display: flex; align-items: center; justify-content: space-between;"
+                    >
+                      <n-button
+                        text
+                        style="font-weight: bold;"
+                        @click="selectPresetMesh(mesh)"
+                      >
+                        {{ mesh }}
+                      </n-button>
+
+                      <n-button
+                        text
+                        size="small"
+                        @click="downloadMesh(mesh)"
+                        title="Open raw .obj in new tab"
+                      >
+                        <NIcon size="18">
+                          <DownloadOutline />
+                        </NIcon>
+                      </n-button>
+                    </div>
+                  </n-space>
+                </div>
+
+                <n-upload
+                  accept=".obj"
+                  :custom-request="handleMeshUpload"
+                  :show-file-list="false"
+                >
+                  <n-button block>Upload New .OBJ Mesh</n-button>
+                </n-upload>
+              </n-card>
+            </n-modal>
+
         </n-card>
 
 
