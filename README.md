@@ -90,3 +90,4 @@ feat: add optional mesh upload support with vertex buffer integration
 - https://developer.mozilla.org/en-US/docs/Web/API/GPUDevice/createTexture
 - https://developer.mozilla.org/en-US/docs/Web/API/GPUDevice/createSampler
 - https://www.naiveui.com/en-US/os-theme/docs/introduction
+- https://web.mit.edu/djwendel/www/weblogo/shapes/basic-shapes/sphere/sphere.obj
