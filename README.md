@@ -91,3 +91,4 @@ feat: add optional mesh upload support with vertex buffer integration
 - https://developer.mozilla.org/en-US/docs/Web/API/GPUDevice/createSampler
 - https://www.naiveui.com/en-US/os-theme/docs/introduction
 - https://web.mit.edu/djwendel/www/weblogo/shapes/basic-shapes/sphere/sphere.obj
+- <a href="https://www.flaticon.com/free-icons/shadow" title="shadow icons">Shadow icons created by Ian Anandara - Flaticon</a>
