@@ -13,6 +13,7 @@ import { ClipboardOutline, DownloadOutline } from '@vicons/ionicons5'
 
 import ConsolePanel from './components/ConsolePanel.vue'
 import PreviewPanel from './components/PreviewPanel.vue'
+import EditorPanel from './components/EditorPanel.vue'
 
 loader.config({
   paths: {
@@ -198,17 +199,7 @@ function downloadMesh(meshName: string) {
 
       <div class="grid-container">
         <!-- Editor (top-left) -->
-        <n-card title="Editor" size="small" class="panel editor" style="grid-row: 1; grid-column: 1;">
-          <VueMonacoEditor
-            language="wgsl"
-            theme="vs-dark"
-            v-model:value="code"
-            style="height: 100%; width: 100%;"
-          />
-          <template #footer>
-            <n-button @click="runShader" block>Run Shader</n-button>
-          </template>
-        </n-card>
+        <EditorPanel v-model:code="code" :runShader="runShader" />
 
         <!-- Preview (top-right) -->
          <PreviewPanel ref="previewRef" style="grid-row: 1; grid-column: 2;" />
@@ -385,10 +376,6 @@ html, body, #app, .n-layout {
   background-color: #101014;
   box-sizing: border-box;
   height: 100%; /* fill the minmax row */
-}
-
-.editor {
-  grid-row: 1 / span 2; /* Span both rows */
 }
 
 /* Container for texture buttons inside 'Textures' tab */
