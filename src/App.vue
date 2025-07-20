@@ -16,8 +16,7 @@ import PreviewPanel from './components/PreviewPanel.vue'
 import EditorPanel from './components/EditorPanel.vue'
 import { useTextures } from './composables/useTextures'
 import { useMesh } from './composables/useMesh'
-import TextureModal from './components/TextureModal.vue'
-import MeshModal from './components/MeshModal.vue'
+import ResourcesPanel from './components/ResourcesPanel.vue'
 
 const {
   selectedTextures,
@@ -91,91 +90,26 @@ function renderClipboardIcon() {
         <!-- Preview (top-right) -->
          <PreviewPanel ref="previewRef" style="grid-row: 1; grid-column: 2;" />
 
-        <!-- Textures (bottom-left) -->
-        <n-card
-          title="Resources"
-          size="small"
-          embedded
-          class="resources-card"
-        >
-          <n-tabs type="segment" animated>
-            <n-tab-pane name="textures" tab="Textures">
-              <div class="texture-buttons">
-                <n-button
-                  v-for="channel in channelList"
-                  :key="channel"
-                  size="small"
-                  block
-                  @click="openTextureModal(channel)"
-                  class="n-button texture-button"
-                >
-                  <template #default>
-                    <img
-                      v-if="selectedTextures[channel]"
-                      :src="selectedTextures[channel]"
-                      :alt="channel"
-                      class="button-bg"
-                    />
-                    <span class="button-label">{{ channel }}</span>
-                  </template>
-                </n-button>
-              </div>
-            </n-tab-pane>
-
-            <n-tab-pane name="mesh" tab="Mesh">
-              <!-- only this wrapper is inline-flex -->
-              <div style="display:inline-flex; align-items:center; gap:8px; margin-top:8px;">
-                <n-button @click="openMeshModal">Select / Upload .OBJ Mesh</n-button>
-                <!-- <n-upload
-                  accept=".obj"
-                  :custom-request="handleMeshUpload"
-                  :show-file-list="false"
-                  style="display:inline-block;"
-                >
-                  <n-button>Upload .OBJ Mesh</n-button>
-                </n-upload> -->
-
-                <n-button
-                  :disabled="!uploadedMesh.name"
-                  tag="div"
-                  type="error"
-                  @click="removeMesh"
-                >
-                  Remove {{ uploadedMesh.name ? uploadedMesh.name : '.OBJ Mesh' }}
-                </n-button>
-
-                <!-- <span v-if="uploadedMesh.name" style="color:white; white-space:nowrap;">
-                  <strong>Uploaded:</strong> {{ uploadedMesh.name }}
-                </span> -->
-              </div>
-
-              <!-- this lives outside the inline-flex container so the checkbox appears below -->
-              <div style="margin-top:12px; display: flex; align-items: center; gap: 12px;">
-                <n-button ghost size="small" @click="copyStarterCode" :render-icon="renderClipboardIcon">
-                  Copy Starter Shader
-                </n-button>
-              </div>
-
-            </n-tab-pane>
-          </n-tabs>
-
-          <TextureModal
-            v-model:show="showTextureModal"
-            :allTextures="allTextures"
-            @selectTexture="selectTexture"
-            @handleUpload="handleUpload"
-          />
-
-          <MeshModal
-            v-model:show="showMeshModal"
-            :presetMeshes="presetMeshes"
-            @selectPresetMesh="selectPresetMesh"
-            @downloadMesh="downloadMesh"
-            @handleUpload="handleMeshUpload"
-          />
-
-        </n-card>
-
+        <!-- Resources (bottom-left) -->
+        <ResourcesPanel
+          :selectedTextures="selectedTextures"
+          :allTextures="allTextures"
+          :showTextureModal="showTextureModal"
+          :showMeshModal="showMeshModal"
+          :presetMeshes="presetMeshes"
+          :uploadedMesh="uploadedMesh"
+          @openTextureModal="openTextureModal"
+          @openMeshModal="openMeshModal"
+          @removeMesh="removeMesh"
+          @copyStarterCode="copyStarterCode"
+          @selectTexture="selectTexture"
+          @handleTextureUpload="handleUpload"
+          @selectPresetMesh="selectPresetMesh"
+          @downloadMesh="downloadMesh"
+          @handleMeshUpload="handleMeshUpload"
+          @update:showTextureModal="val => showTextureModal = val"
+          @update:showMeshModal="val => showMeshModal = val"
+        />
 
         <!-- Console (bottom-right) -->
         <ConsolePanel
