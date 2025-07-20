@@ -37,7 +37,9 @@ export function useTextures() {
       showTextureModal.value = false
       onFinish()
     }
-    reader.readAsDataURL(file.file)
+    const blob = (file.file ?? file)
+    console.log("Uploading file:", file)
+    reader.readAsDataURL(blob)
   }
 
   const allTextures = computed(() =>

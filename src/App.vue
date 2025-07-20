@@ -16,6 +16,7 @@ import PreviewPanel from './components/PreviewPanel.vue'
 import EditorPanel from './components/EditorPanel.vue'
 import { useTextures } from './composables/useTextures'
 import { useMesh } from './composables/useMesh'
+import TextureModal from './components/TextureModal.vue'
 
 const {
   selectedTextures,
@@ -157,31 +158,12 @@ function renderClipboardIcon() {
             </n-tab-pane>
           </n-tabs>
 
-            <n-modal v-model:show="showTextureModal">
-              <n-card title="Select or Upload Texture" style="width: 600px">
-                <!-- image grid -->
-                <div class="thumbnail-grid" style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
-                  <n-image
-                    v-for="(img, index) in allTextures"
-                    :key="index"
-                    :src="img"
-                    width="80"
-                    height="80"
-                    style="cursor: pointer; border-radius: 4px"
-                    @click="selectTexture(img)"
-                    :preview-disabled="true"
-                  />
-                </div>
-                <!-- upload button -->
-                <n-upload
-                  accept="image/*"
-                  :custom-request="handleUpload"
-                  :show-file-list="false"
-                >
-                  <n-button block>Upload New Texture</n-button>
-                </n-upload>
-              </n-card>
-            </n-modal>
+          <TextureModal
+            v-model:show="showTextureModal"
+            :allTextures="allTextures"
+            @selectTexture="selectTexture"
+            @handleUpload="handleUpload"
+          />
 
             <n-modal v-model:show="showMeshModal">
               <n-card title="Select or Upload Mesh" style="width: 480px">
