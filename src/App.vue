@@ -1,15 +1,9 @@
 <script setup lang="ts">
 import { darkTheme } from 'naive-ui'
-import { ref, reactive, computed, h } from 'vue'
+import { ref } from 'vue'
 const code = ref(`// Write your WGSL code here`)
 
-import { DEFAULT_TEXTURES } from './webgpu/textures'
-import { initWebGPU } from './webgpu/renderer'
-import { parseObjToVertices } from './utils/objParser'
-
-import { VueMonacoEditor, loader } from '@guolao/vue-monaco-editor'
-import { NIcon } from 'naive-ui'
-import { ClipboardOutline, DownloadOutline } from '@vicons/ionicons5'
+import { loader } from '@guolao/vue-monaco-editor'
 
 import { useShaderRunner } from './composables/useShaderRunner'
 import ConsolePanel from './components/ConsolePanel.vue'
@@ -70,16 +64,6 @@ function handleRunShader() {
     }
   })
 }
-
-type ChannelKey = 'iChannel0' | 'iChannel1' | 'iChannel2' | 'iChannel3'
-const channelList: ChannelKey[] = ['iChannel0', 'iChannel1', 'iChannel2', 'iChannel3']
-
-function renderClipboardIcon() {
-  return h(NIcon, null, {
-    default: () => h(ClipboardOutline)
-  })
-}
-
 </script>
 
 <template>
