@@ -14,6 +14,17 @@ import { ClipboardOutline, DownloadOutline } from '@vicons/ionicons5'
 import ConsolePanel from './components/ConsolePanel.vue'
 import PreviewPanel from './components/PreviewPanel.vue'
 import EditorPanel from './components/EditorPanel.vue'
+import { useTextures } from './composables/useTextures'
+
+const {
+  selectedTextures,
+  allTextures,
+  showTextureModal,
+  openTextureModal,
+  selectTexture,
+  handleUpload
+} = useTextures()
+
 
 loader.config({
   paths: {
@@ -24,17 +35,6 @@ loader.config({
 // const canvasRef = ref<HTMLCanvasElement | null>(null)
 const previewRef = ref<InstanceType<typeof PreviewPanel> | null>(null)
 const consoleOutput = ref("")
-const selectedTextures = reactive({
-  iChannel0: null as string | null,
-  iChannel1: null as string | null,
-  iChannel2: null as string | null,
-  iChannel3: null as string | null
-})
-
-selectedTextures.iChannel0 = DEFAULT_TEXTURES[0].path
-selectedTextures.iChannel1 = DEFAULT_TEXTURES[1].path
-selectedTextures.iChannel2 = DEFAULT_TEXTURES[2].path
-selectedTextures.iChannel3 = DEFAULT_TEXTURES[3].path
 
 function runShader() {
   if (!previewRef.value?.canvasRef || !selectedTextures) return;
@@ -44,7 +44,7 @@ function runShader() {
   initWebGPU(
     previewRef.value.canvasRef,
     code.value,
-    selectedTextures,
+    selectedTextures.value,
     (msg) => {
       consoleOutput.value += (msg || "Compiled successfully") + '\n'
     },
@@ -52,40 +52,8 @@ function runShader() {
   )
 }
 
-const showTextureModal = ref(false)
-const activeChannel = ref('')
-const availableTextures = ref<string[]>([])
-
-function openTextureModal(channel: string) {
-  activeChannel.value = channel
-  showTextureModal.value = true
-}
-
-function selectTexture(img: string) {
-  selectedTextures[activeChannel.value as keyof typeof selectedTextures] = img
-  showTextureModal.value = false
-}
-
-function handleUpload({ file, onFinish }: any) {
-  const reader = new FileReader()
-  reader.onload = () => {
-    const imgSrc = reader.result as string
-    availableTextures.value.push(imgSrc)
-    selectedTextures[activeChannel.value as keyof typeof selectedTextures] = imgSrc
-    showTextureModal.value = false
-    onFinish()
-  }
-  reader.readAsDataURL(file.file)
-}
-
 type ChannelKey = 'iChannel0' | 'iChannel1' | 'iChannel2' | 'iChannel3'
 const channelList: ChannelKey[] = ['iChannel0', 'iChannel1', 'iChannel2', 'iChannel3']
-
-const uploadedTextures = ref<string[]>([])
-
-const allTextures = computed(() =>
-  DEFAULT_TEXTURES.map(tex => tex.path).concat(uploadedTextures.value)
-)
 
 const uploadedMesh = reactive({
   name: '',
@@ -274,6 +242,7 @@ function downloadMesh(meshName: string) {
 
             <n-modal v-model:show="showTextureModal">
               <n-card title="Select or Upload Texture" style="width: 600px">
+                <!-- image grid -->
                 <div class="thumbnail-grid" style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
                   <n-image
                     v-for="(img, index) in allTextures"
@@ -286,7 +255,7 @@ function downloadMesh(meshName: string) {
                     :preview-disabled="true"
                   />
                 </div>
-
+                <!-- upload button -->
                 <n-upload
                   accept="image/*"
                   :custom-request="handleUpload"
