@@ -11,6 +11,7 @@ import { VueMonacoEditor, loader } from '@guolao/vue-monaco-editor'
 import { NIcon } from 'naive-ui'
 import { ClipboardOutline, DownloadOutline } from '@vicons/ionicons5'
 
+import { useShaderRunner } from './composables/useShaderRunner'
 import ConsolePanel from './components/ConsolePanel.vue'
 import PreviewPanel from './components/PreviewPanel.vue'
 import EditorPanel from './components/EditorPanel.vue'
@@ -49,20 +50,25 @@ loader.config({
 const previewRef = ref<InstanceType<typeof PreviewPanel> | null>(null)
 const consoleOutput = ref("")
 
-function runShader() {
-  if (!previewRef.value?.canvasRef || !selectedTextures) return;
+const { runShader } = useShaderRunner()
 
-  // consoleOutput.value = "Compiled successfully, running shader..."
-  consoleOutput.value = ""
-  initWebGPU(
-    previewRef.value.canvasRef,
-    code.value,
-    selectedTextures.value,
-    (msg) => {
-      consoleOutput.value += (msg || "Compiled successfully") + '\n'
-    },
-    uploadedMesh.vertexData // vertex buffer or null
-  )
+function handleRunShader() {
+  if (!previewRef.value?.canvasRef) return
+  consoleOutput.value = ''
+
+  const validTextures = Object.fromEntries(
+    Object.entries(selectedTextures.value).filter(([_, v]) => typeof v === 'string' && v !== null)
+  ) as Record<string, string>
+
+  runShader({
+    canvas: previewRef.value.canvasRef,
+    code: code.value,
+    textures: validTextures,
+    mesh: uploadedMesh.vertexData,
+    onLog: msg => {
+      consoleOutput.value += (msg || 'Compiled successfully') + '\n'
+    }
+  })
 }
 
 type ChannelKey = 'iChannel0' | 'iChannel1' | 'iChannel2' | 'iChannel3'
@@ -85,7 +91,7 @@ function renderClipboardIcon() {
 
       <div class="grid-container">
         <!-- Editor (top-left) -->
-        <EditorPanel v-model:code="code" :runShader="runShader" />
+        <EditorPanel v-model:code="code" :runShader="handleRunShader" />
 
         <!-- Preview (top-right) -->
          <PreviewPanel ref="previewRef" style="grid-row: 1; grid-column: 2;" />
