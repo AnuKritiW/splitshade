@@ -17,6 +17,7 @@ import EditorPanel from './components/EditorPanel.vue'
 import { useTextures } from './composables/useTextures'
 import { useMesh } from './composables/useMesh'
 import TextureModal from './components/TextureModal.vue'
+import MeshModal from './components/MeshModal.vue'
 
 const {
   selectedTextures,
@@ -165,47 +166,13 @@ function renderClipboardIcon() {
             @handleUpload="handleUpload"
           />
 
-            <n-modal v-model:show="showMeshModal">
-              <n-card title="Select or Upload Mesh" style="width: 480px">
-                <div style="margin-bottom: 16px;">
-                  <h4 style="margin: 0 0 8px; color: white;">Preset Meshes:</h4>
-                  <n-space vertical size="small">
-                    <div
-                      v-for="mesh in presetMeshes"
-                      :key="mesh"
-                      style="display: flex; align-items: center; justify-content: space-between;"
-                    >
-                      <n-button
-                        text
-                        style="font-weight: bold;"
-                        @click="selectPresetMesh(mesh)"
-                      >
-                        {{ mesh }}
-                      </n-button>
-
-                      <n-button
-                        text
-                        size="small"
-                        @click="downloadMesh(mesh)"
-                        title="Open raw .obj in new tab"
-                      >
-                        <NIcon size="18">
-                          <DownloadOutline />
-                        </NIcon>
-                      </n-button>
-                    </div>
-                  </n-space>
-                </div>
-
-                <n-upload
-                  accept=".obj"
-                  :custom-request="handleMeshUpload"
-                  :show-file-list="false"
-                >
-                  <n-button block>Upload New .OBJ Mesh</n-button>
-                </n-upload>
-              </n-card>
-            </n-modal>
+          <MeshModal
+            v-model:show="showMeshModal"
+            :presetMeshes="presetMeshes"
+            @selectPresetMesh="selectPresetMesh"
+            @downloadMesh="downloadMesh"
+            @handleUpload="handleMeshUpload"
+          />
 
         </n-card>
 
