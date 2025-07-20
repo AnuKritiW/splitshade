@@ -12,6 +12,7 @@ import EditorPanel from './components/EditorPanel.vue'
 import { useTextures } from './composables/useTextures'
 import { useMesh } from './composables/useMesh'
 import ResourcesPanel from './components/ResourcesPanel.vue'
+import './styles/app.css'
 
 const {
   selectedTextures,
@@ -111,76 +112,3 @@ function handleRunShader() {
     </div>
   </n-config-provider>
 </template>
-
-<style>
-html, body, #app, .n-layout {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-}
-
-/* Root grid with two rows: header + panels */
-.root-grid {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  height: 100vh;
-}
-
-.grid-container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 3fr 1fr;
-  gap: 12px;
-  padding: 12px;
-  background-color: #101014;
-  box-sizing: border-box;
-  height: 100%; /* fill the minmax row */
-}
-
-/* Container for texture buttons inside 'Textures' tab */
-.texture-buttons {
-  display: flex;
-  flex-direction: row;
-  gap: 8px;
-  padding: 8px;
-}
-
-/* Base button layout: sizing and appearance */
-.texture-buttons .n-button {
-  flex: 1;
-  aspect-ratio: 1 / .4;       /* Makes them square */
-  height: auto;               /* Let height be defined by width via aspect ratio */
-  padding: 0;                 /* Removes inner padding for tighter fit */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;         /* Smaller font for labels */
-}
-
-/* Individual texture button: enables layered image + label */
-.texture-button {
-  position: relative;
-  overflow: hidden;
-}
-
-/* Background thumbnail image (stretched to fill button) */
-.texture-button .button-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;          /* Preserves aspect ratio, fills area */
-  z-index: 0;
-  opacity: 0.6;               /* Faint background behind label */
-}
-
-/* Overlay label for each channel (e.g., 'iChannel0') */
-.texture-button .button-label {
-  position: relative;
-  z-index: 1;
-  color: white;
-  font-weight: bold;
-}
-
-</style>
