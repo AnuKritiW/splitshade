@@ -5,6 +5,16 @@ import { fullscreenVertexWGSL, injectedHeader, compileShaderModule } from './sha
 import { createUniforms } from './uniforms';
 import { createPipeline } from './pipeline';
 
+let currentFrameId: number | null = null;
+
+// Cancel any active render loop
+export function cancelCurrentRenderLoop() {
+  if (currentFrameId !== null) {
+    cancelAnimationFrame(currentFrameId);
+    currentFrameId = null;
+  }
+}
+
 function runRenderPass(
   device: GPUDevice,
   context: GPUCanvasContext,
@@ -62,6 +72,7 @@ export async function initWebGPU(
   };
 
   console.log("Initializing WebGPU...");
+  cancelCurrentRenderLoop(); // stop any previous render loop
 
   try {
     const { device, adapter } = await getWebGPUDevice();
@@ -180,9 +191,9 @@ export async function initWebGPU(
       device.queue.writeBuffer(mouseBuffer, 0, mouseVec4);
 
       runRenderPass(device, context, pipeline, bindGroup, timeBuffer, startTime, vertexBuffer, vertexData);
-      requestAnimationFrame(frame);
+      currentFrameId = requestAnimationFrame(frame);
     }
-    requestAnimationFrame(frame);
+    currentFrameId = requestAnimationFrame(frame);
 
     // Pop error scope
     const error = await device.popErrorScope();
