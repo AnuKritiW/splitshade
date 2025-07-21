@@ -23,7 +23,7 @@ export function parseWGSL(wgslCode: string) {
       return {
         type: 'invalid',
         valid: false,
-        message: 'Only fragment shaders are supported in this playground.',
+        message: 'A fragment shader entry point is required to render to screen.',
       };
     }
   } catch (err) {
