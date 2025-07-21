@@ -2,10 +2,12 @@ name: Check Vite Build
 
 on:
   pull_request:
+    types: [opened, synchronize, ready_for_review]
     branches: [main]
 
 jobs:
   build:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
