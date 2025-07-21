@@ -12,6 +12,7 @@ import EditorPanel from './components/EditorPanel.vue'
 import { useTextures } from './composables/useTextures'
 import { useMesh } from './composables/useMesh'
 import ResourcesPanel from './components/ResourcesPanel.vue'
+import WebGPUWarning from './components/WebGPUWarning.vue'
 import './styles/app.css'
 
 const {
@@ -67,6 +68,7 @@ function handleRunShader() {
 </script>
 
 <template>
+  <WebGPUWarning />
   <n-config-provider :theme="darkTheme">
     <div class="root-grid">
       <n-layout-header bordered style="padding: 12px;">
