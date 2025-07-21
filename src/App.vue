@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { darkTheme } from 'naive-ui'
-import { onMounted, ref } from 'vue'
+import { ref } from 'vue'
 const code = ref(`// Write your WGSL code here`)
 
 import { loader } from '@guolao/vue-monaco-editor'
@@ -12,15 +12,8 @@ import EditorPanel from './components/EditorPanel.vue'
 import { useTextures } from './composables/useTextures'
 import { useMesh } from './composables/useMesh'
 import ResourcesPanel from './components/ResourcesPanel.vue'
+import WebGPUWarning from './components/WebGPUWarning.vue'
 import './styles/app.css'
-
-const webgpuSupported = ref(true)
-
-onMounted(() => {
-  if (!navigator.gpu) {
-    webgpuSupported.value = false
-  }
-})
 
 const {
   selectedTextures,
@@ -75,15 +68,7 @@ function handleRunShader() {
 </script>
 
 <template>
-  <n-alert
-    v-if="!webgpuSupported"
-    type="warning"
-    title="WebGPU Not Supported"
-    style="margin: 12px;"
-  >
-    Your browser does not support WebGPU. Please use a recent version of Chrome, Edge, or Firefox with WebGPU enabled.
-  </n-alert>
-
+  <WebGPUWarning />
   <n-config-provider :theme="darkTheme">
     <div class="root-grid">
       <n-layout-header bordered style="padding: 12px;">
