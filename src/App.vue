@@ -41,7 +41,6 @@ loader.config({
   },
 })
 
-// const canvasRef = ref<HTMLCanvasElement | null>(null)
 const previewRef = ref<InstanceType<typeof PreviewPanel> | null>(null)
 const consoleOutput = ref("")
 
