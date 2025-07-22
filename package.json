@@ -20,15 +20,19 @@
     "wgsl_reflect": "^1.2.1"
   },
   "devDependencies": {
+    "@testing-library/vue": "^8.1.0",
+    "@types/node": "^24.1.0",
     "@types/obj-file-parser": "^0.5.2",
     "@vitejs/plugin-vue": "^5.2.3",
     "@vue/tsconfig": "^0.7.0",
     "@webgpu/types": "^0.1.63",
     "gh-pages": "^6.3.0",
+    "jsdom": "^26.1.0",
     "naive-ui": "^2.42.0",
     "typescript": "~5.8.3",
     "vfonts": "^0.0.3",
     "vite": "^6.3.5",
+    "vitest": "^3.2.4",
     "vue-tsc": "^2.2.8"
   }
 }
