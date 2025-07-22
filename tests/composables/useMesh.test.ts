@@ -55,7 +55,7 @@ describe('useMesh', () => {
     const mockObjData = 'v 0 0 0\nv 1 1 1\n'
   
     // Mock global fetch to simulate loading a mesh from a URL
-    ;(global as any).fetch = vi.fn(() =>
+    ;(globalThis as any).fetch = vi.fn(() =>
       Promise.resolve({ text: () => Promise.resolve(mockObjData) })
     )
 

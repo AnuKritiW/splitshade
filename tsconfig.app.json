@@ -2,7 +2,7 @@
   "extends": "@vue/tsconfig/tsconfig.dom.json",
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
-    "types": ["@webgpu/types", "vitest/globals"],
+    "types": ["@webgpu/types", "vitest/globals", "node"],
     "baseUrl": ".", // enables relative module resolution
     "paths": {
       "@/*": ["src/*"] // defines alias

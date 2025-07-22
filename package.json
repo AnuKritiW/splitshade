@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@testing-library/vue": "^8.1.0",
+    "@types/node": "^24.1.0",
     "@types/obj-file-parser": "^0.5.2",
     "@vitejs/plugin-vue": "^5.2.3",
     "@vue/tsconfig": "^0.7.0",
