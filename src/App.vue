@@ -4,6 +4,7 @@ import { ref } from 'vue'
 const code = ref(`// Write your WGSL code here`)
 
 import { loader } from '@guolao/vue-monaco-editor'
+import { LogoGithub } from '@vicons/ionicons5'
 
 import { useShaderRunner } from './composables/useShaderRunner'
 import ConsolePanel from './components/ConsolePanel.vue'
@@ -72,7 +73,23 @@ function handleRunShader() {
   <n-config-provider :theme="darkTheme">
     <div class="root-grid">
       <n-layout-header bordered style="padding: 12px;">
-        <h2 style="margin: 0; color: white">SplitShade: WebGPU Playground</h2>
+        <div class="header-content">
+          <h2 style="margin: 0; color: white;">SplitShade: WebGPU Playground</h2>
+          <n-button
+            text
+            tag="a"
+            href="https://github.com/AnuKritiW/splitshade-webgpu-playground"
+            target="_blank"
+            rel="noopener"
+            title="View on GitHub"
+          >
+            <template #icon>
+              <n-icon size="28">
+                <LogoGithub />
+              </n-icon>
+            </template>
+          </n-button>
+        </div>
       </n-layout-header>
 
       <div class="grid-container">

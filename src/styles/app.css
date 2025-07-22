@@ -67,3 +67,9 @@ html, body, #app, .n-layout {
   color: white;
   font-weight: bold;
 }
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
