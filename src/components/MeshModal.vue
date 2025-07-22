@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, nextTick, watch } from 'vue'
 import { NModal, NCard, NSpace, NButton, NIcon, NUpload } from 'naive-ui'
 import { DownloadOutline } from '@vicons/ionicons5'
 
@@ -19,6 +19,24 @@ const showProxy = computed({
   get: () => props.show,
   set: (val) => emit('update:show', val),
 })
+
+// Prevent misleading focus highlight on first preset button when modal opens
+// Browsers auto-focus the first focusable element (the first .obj button), which Naive UI styles with a green outline
+// This watch removes focus from that element after the modal is mounted to avoid visual confusion
+watch(
+  () => props.show,
+  (newVal) => {
+    if (newVal) {
+      nextTick(() => {
+        // Remove focus from the first auto-focused button
+        const focused = document.activeElement as HTMLElement
+        if (focused && focused.tagName === 'BUTTON') {
+          focused.blur()
+        }
+      })
+    }
+  }
+)
 </script>
 
 <template>
