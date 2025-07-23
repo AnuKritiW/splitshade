@@ -1,22 +1,13 @@
 import { describe, it, expect } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { mountWithGlobalStubs } from '../test-utils/mountWithGlobalStubs'
 import ConsolePanel from '@/components/ConsolePanel.vue'
 
 describe('ConsolePanel.vue', () => {
   it('displays consoleOutput correctly', async () => {
     const testOutput = 'Shader compiled successfully'
-    const wrapper = mount(ConsolePanel, {
+    const wrapper = mountWithGlobalStubs(ConsolePanel, {
       props: {
         consoleOutput: testOutput,
-      },
-      // when <n-card> is encountered, render a basic <div> with its slot content
-      // this avoids warnings from external UI libraries like Naive UI that Vitest doesn’t auto-resolve
-      global: {
-        stubs: {
-          'n-card': {
-            template: '<div><slot /></div>',
-          },
-        },
       },
     })
 
@@ -29,16 +20,9 @@ describe('ConsolePanel.vue', () => {
   })
 
   it('updates display when consoleOutput prop changes', async () => {
-    const wrapper = mount(ConsolePanel, {
+    const wrapper = mountWithGlobalStubs(ConsolePanel, {
       props: {
         consoleOutput: 'Initial output',
-      },
-      global: {
-        stubs: {
-          'n-card': {
-            template: '<div><slot /></div>',
-          },
-        },
       },
     })
 
