@@ -1,12 +1,20 @@
 import { mount, type MountingOptions, type VueWrapper } from '@vue/test-utils'
 import type { ComponentPublicInstance } from 'vue'
 
-// Stub for Naive UI's <n-card>
-// when <n-card> is encountered, render a basic <div> with its slot content
-// this avoids warnings from external UI libraries like Naive UI that Vitest doesn’t auto-resolve
+// Default stub config to avoid warnings for external components during testing
 const defaultGlobalStubs = {
+  // Stub for Naive UI's <n-card>
+  // when <n-card> is encountered, render a basic <div> with its slot content
+  // this avoids warnings from external UI libraries like Naive UI that Vitest doesn’t auto-resolve
   'n-card': {
     template: '<div><slot /></div>',
+  },
+  // Stub <VueMonacoEditor> with a basic <textarea> that emits 'change' on input
+  VueMonacoEditor: {
+    name: 'VueMonacoEditor',
+    props: ['value'],
+    emits: ['change'],
+    template: `<textarea :value="value" @input="$emit('change', $event.target.value)" />`,
   },
 }
 
