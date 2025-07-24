@@ -5,7 +5,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineExpose, ref } from 'vue'
+import { ref } from 'vue'
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 
