@@ -1,29 +1,12 @@
 import { describe, it, expect, vi } from 'vitest'
 import MeshModal from '@/components/MeshModal.vue'
-import { mountWithGlobalStubs } from '../test-utils/mountWithGlobalStubs'
+import { mountModalWithStubs } from '../test-utils/mountWithGlobalStubs'
 
 function mountMeshModal(customProps = {}) {
-  return mountWithGlobalStubs(MeshModal, {
-    props: {
-      show: true,
-      presetMeshes: ['cube.obj', 'sphere.obj'],
-      ...customProps,
-    },
-    global: {
-      stubs: {
-        teleport: true, // render modal outside the component tree
-        'n-modal': {
-          template: `<div><slot /></div>`,
-        },
-        'n-card': { template: '<div><slot /></div>' },
-        'n-button': { template: '<button><slot /></button>' },
-        'n-upload': {
-          template: '<div><slot /></div>',
-          props: ['customRequest'],
-        },
-      },
-    },
-  })
+  return mountModalWithStubs(MeshModal, {
+    show: true,
+    presetMeshes: ['cube.obj', 'sphere.obj'],
+  }, customProps)
 }
 
 describe('MeshModal.vue', () => {

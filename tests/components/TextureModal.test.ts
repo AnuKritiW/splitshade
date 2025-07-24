@@ -1,35 +1,12 @@
 import { describe, it, expect, vi } from 'vitest'
 import TextureModal from '@/components/TextureModal.vue'
-import { mountWithGlobalStubs } from '../test-utils/mountWithGlobalStubs'
+import { mountModalWithStubs } from '../test-utils/mountWithGlobalStubs'
 
 function mountTextureModal(customProps = {}) {
-  return mountWithGlobalStubs(TextureModal, {
-    props: {
-      show: true,
-      allTextures: ['img1.png', 'img2.jpg'],
-      ...customProps,
-    },
-    global: {
-      stubs: {
-        teleport: true, // render modal outside the component tree
-        'n-modal': {
-          props: ['modelValue'],
-          emits: ['update:modelValue'],
-          template: `<div><slot /></div>`,
-        },
-        'n-card': { template: '<div><slot /><slot name="header" /></div>' },
-        'n-image': {
-          props: ['src'],
-          template: `<img :src="src" @click="$emit('click')" />`
-        },
-        'n-upload': {
-          template: '<div><slot /></div>',
-          props: ['customRequest'],
-        },
-        'n-button': { template: '<button><slot /></button>' },
-      },
-    },
-  })
+  return mountModalWithStubs(TextureModal, {
+    show: true,
+    allTextures: ['img1.png', 'img2.jpg'],
+  }, customProps)
 }
 
 describe('TextureModal.vue', () => {

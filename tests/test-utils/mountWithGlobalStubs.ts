@@ -33,3 +33,29 @@ export function mountWithGlobalStubs<T extends ComponentPublicInstance>(
     },
   })
 }
+
+export function mountModalWithStubs(
+  component: Component,
+  defaultProps: Record<string, any>,
+  customProps: Record<string, any> = {}
+): VueWrapper {
+  return mountWithGlobalStubs(component, {
+    props: { ...defaultProps, ...customProps },
+    global: {
+      stubs: {
+        teleport: true,
+        'n-modal': { template: '<div><slot /></div>' },
+        'n-card': { template: '<div><slot /></div>' },
+        'n-button': { template: '<button><slot /></button>' },
+        'n-upload': {
+          template: '<div><slot /></div>',
+          props: ['customRequest'],
+        },
+        'n-image': {
+          props: ['src'],
+          template: `<img :src="src" @click="$emit('click')" />`,
+        },
+      },
+    },
+  })
+}
