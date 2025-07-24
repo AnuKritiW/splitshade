@@ -83,6 +83,70 @@ feat: add optional mesh upload support with vertex buffer integration
 - Handles iChannel texture bindings dynamically
 - Includes error handling and fallback logging
 
+## Testing
+
+### front end
+
+#### What to Test
+
+| Area                    | Examples                                                                 |
+|-------------------------|--------------------------------------------------------------------------|
+| Render logic            | Are key elements (images, modals, buttons) visible based on props/state? |
+| Event handling          | Does clicking, uploading, or typing emit the right event?                |
+| Conditional visibility  | Is content shown/hidden based on `v-if`, `v-show`, `v-model`, etc.?      |
+| Component communication | Are `emit` and `v-model` working as intended?                            |
+
+---
+
+#### Testing Strategy
+
+1. Use `mountWithGlobalStubs`
+
+Use custom utility to mount with global Naive UI stubs and avoid real rendering.
+
+```ts
+const wrapper = mountWithGlobalStubs(MyComponent, {
+  props: { ... },
+})
+```
+
+2. Stub Naive UI Components
+
+Stub smart:
+
+- Modal-like components must **respect `v-model`** and expose content conditionally.
+
+Example for `<n-modal>`:
+
+```ts
+'n-modal': {
+  props: ['modelValue'],
+  emits: ['update:modelValue'],
+  template: `<div v-if="modelValue"><slot /></div>`
+}
+```
+
+3. Emit Testing
+
+If component emits:
+
+- Events: use `wrapper.vm.$emit(...)`
+- Props: trigger user actions and check `wrapper.emitted('event')`
+
+4. Test HTML Output Sparingly
+
+- Prefer `findAll()`, `text()`, or `trigger()` over asserting raw `.html()` strings.
+- Use `.html()` only when diagnosing missing content or debugging teleport issues.
+
+5. Teleporting Components
+
+Components like `<n-modal>` use Vue’s `<teleport>`. In tests:
+
+- Content won’t be in the wrapper tree unless teleportation is stubbed or disabled.
+
+**Solution:** Stub modal to keep children in-tree using `v-if` in the stub template (see above).
+
+
 # Sources/References
 
 - https://shadertoyunofficial.wordpress.com/2019/07/23/shadertoy-media-files/
