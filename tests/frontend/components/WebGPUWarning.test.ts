@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import WebGPUWarning from '@/components/WebGPUWarning.vue'
-import { mountWithGlobalStubs } from '../test-utils/mountWithGlobalStubs'
+import { mountWithGlobalStubs } from '../utils/mountWithGlobalStubs'
 import { nextTick } from 'vue'
 
 // create mount helper with necessary stub for <n-alert>
