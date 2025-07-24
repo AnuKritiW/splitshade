@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import ResourcesPanel from '@/components/ResourcesPanel.vue'
-import { mountWithGlobalStubs } from '../test-utils/mountWithGlobalStubs'
+import { mountWithGlobalStubs } from '../utils/mountWithGlobalStubs'
 
 function mountResourcesPanel(customProps = {}) {
   return mountWithGlobalStubs(ResourcesPanel, {

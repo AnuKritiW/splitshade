@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { mountWithGlobalStubs } from '../test-utils/mountWithGlobalStubs'
+import { mountWithGlobalStubs } from '../utils/mountWithGlobalStubs'
 import ConsolePanel from '@/components/ConsolePanel.vue'
 
 describe('ConsolePanel.vue', () => {
