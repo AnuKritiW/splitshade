@@ -33,7 +33,11 @@ export async function getWebGPUDevice(): Promise<{ device: GPUDevice | null, ada
 }
 
 export function configureCanvasContext(canvas: HTMLCanvasElement, device: GPUDevice) {
-  const context = canvas.getContext("webgpu") as GPUCanvasContext;
+  const context = canvas.getContext("webgpu")
+  if (!context) {
+    throw new Error('WebGPU context is not available on the provided canvas.')
+  }
+
   const format = navigator.gpu.getPreferredCanvasFormat();
   context.configure({
     device,
