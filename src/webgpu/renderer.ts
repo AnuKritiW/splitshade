@@ -110,14 +110,15 @@ export async function initWebGPU(
     canvas.addEventListener("mouseup", () => { mouse.down = false; });
 
     const parsedCode = parseWGSL(shaderCode);
-    output(`Detected shader type: ${parsedCode.type}`);
 
     // log the most relevant error message
     if (!parsedCode.valid) return output(parsedCode.message || parsedCode.error || 'Invalid shader.');
-    parsedCode.warnings?.forEach(output);
 
     if (!parsedCode.entryPoints || Object.values(parsedCode.entryPoints).every(arr => !arr?.length))
       return console.error("No entry points found in shader code.");
+
+    output(`Detected shader type: ${parsedCode.type}`);
+    parsedCode.warnings?.forEach(output);
 
     let fullShaderCode = injectedHeader + '\n' + shaderCode;
 
