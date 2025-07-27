@@ -1,0 +1,36 @@
+name: Run Unit Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        project: [backend, frontend]
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ${{ matrix.project }} tests
+        run: |
+          if [ "${{ matrix.project }}" = "backend" ]; then
+            npx vitest run tests/backend
+          else
+            npx vitest run tests/frontend
+          fi
