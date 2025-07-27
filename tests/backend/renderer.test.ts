@@ -55,11 +55,7 @@ describe('renderer.ts', () => {
     vi.stubGlobal('performance', { now: () => 0 });
 
     // avoid infinite render loop
-    let capturedFrameCallback: FrameRequestCallback;
-    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
-      capturedFrameCallback = cb;
-      return 1;
-    });
+    vi.stubGlobal('requestAnimationFrame', () => 1);
     vi.stubGlobal('cancelAnimationFrame', vi.fn());
 
     // mock WebGPU setup from context module
