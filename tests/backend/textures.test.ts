@@ -65,8 +65,8 @@ describe('loadDefaultTexture', () => {
     expect(mockDevice.createTexture).toHaveBeenCalledWith(
       expect.objectContaining({
         size: [256, 256, 1],
-        format: 'rgba8unorm',
-        usage: expect.any(Number),
+        format: 'rgba8unorm-srgb',
+        usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
       })
     );
 
@@ -81,6 +81,8 @@ describe('loadDefaultTexture', () => {
     expect(mockDevice.createSampler).toHaveBeenCalledWith({
       magFilter: 'linear',
       minFilter: 'linear',
+      addressModeU: 'repeat',
+      addressModeV: 'repeat',
     });
 
     expect(result).toEqual({

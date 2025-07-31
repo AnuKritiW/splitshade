@@ -46,7 +46,7 @@ export async function loadDefaultTexture(device: GPUDevice, src: string): Promis
   // Allocates a GPU texture on the device
   const texture = device.createTexture({
     size: [bitmap.width, bitmap.height, 1], // size defines the width, height, and depth (depth = 1 for 2D)
-    format: 'rgba8unorm', // how pixel data is stored — rgba8unorm is a common 8-bit format
+    format: 'rgba8unorm-srgb', // how pixel data is stored — rgba8unorm is a common 8-bit format
     /*
         TEXTURE_BINDING: You want to sample this texture in a shader
         COPY_DST: You're going to copy image data into this texture
@@ -66,6 +66,8 @@ export async function loadDefaultTexture(device: GPUDevice, src: string): Promis
   const sampler = device.createSampler({
     magFilter: 'linear', // smooth interpolation between texels
     minFilter: 'linear',
+    addressModeU: 'repeat',
+    addressModeV: 'repeat',
   });
 
   return {
