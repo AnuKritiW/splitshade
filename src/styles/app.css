@@ -73,3 +73,10 @@ html, body, #app, .n-layout {
   justify-content: space-between;
   align-items: center;
 }
+
+.header-links {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem; /* spacing between Docs and GitHub */
+  margin-right: 20px;
+}

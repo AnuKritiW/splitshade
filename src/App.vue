@@ -75,20 +75,33 @@ function handleRunShader() {
       <n-layout-header bordered style="padding: 12px;">
         <div class="header-content">
           <h2 style="margin: 0; color: white;">SplitShade: WebGPU Playground</h2>
-          <n-button
-            text
-            tag="a"
-            href="https://github.com/AnuKritiW/splitshade-webgpu-playground"
-            target="_blank"
-            rel="noopener"
-            title="View on GitHub"
-          >
-            <template #icon>
-              <n-icon size="28">
-                <LogoGithub />
-              </n-icon>
-            </template>
-          </n-button>
+          <div class="header-links">
+            <n-button
+              class="docs-button"
+              text
+              tag="a"
+              href="https://anukritiw.github.io/splitshade-docs"
+              target="_blank"
+              rel="noopener"
+              title="Read the docs"
+            >
+              <span>Docs ↗</span>
+            </n-button>
+            <n-button
+              text
+              tag="a"
+              href="https://github.com/AnuKritiW/splitshade-webgpu-playground"
+              target="_blank"
+              rel="noopener"
+              title="View on GitHub"
+            >
+              <template #icon>
+                <n-icon size="28">
+                  <LogoGithub />
+                </n-icon>
+              </template>
+            </n-button>
+          </div>
         </div>
       </n-layout-header>
 
