@@ -5,14 +5,10 @@
       <!-- Structured error display -->
       <div v-if="structuredErrors.length > 0" class="structured-errors">
         <div v-for="(error, index) in structuredErrors" :key="index"
-             class="error-item"
-             :class="error.severity">
+             class="error-item">
           <div class="error-header">
-            <n-tag
-              :type="error.severity === 'error' ? 'error' : error.severity === 'warning' ? 'warning' : 'info'"
-              size="small"
-            >
-              {{ error.severity.toUpperCase() }}
+            <n-tag type="error" size="small">
+              ERROR
             </n-tag>
             <button
               class="line-link"
@@ -50,7 +46,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { getHeaderLineOffset, parseWebGPUErrors, type ParsedError } from '../webgpu/parser';
+import { getHeaderLineOffset, parseWebGPUErrors } from '../webgpu/parser';
 
 const props = defineProps<{
   consoleOutput: string
@@ -198,21 +194,8 @@ const tokens = computed(() => {
   padding: 12px;
   border-radius: 6px;
   border-left: 4px solid;
-}
-
-.structured-errors .error-item.error {
   background-color: rgba(255, 99, 99, 0.15);
   border-left-color: #ff6363;
-}
-
-.structured-errors .error-item.warning {
-  background-color: rgba(255, 193, 7, 0.15);
-  border-left-color: #ffc107;
-}
-
-.structured-errors .error-item.info {
-  background-color: rgba(23, 162, 184, 0.15);
-  border-left-color: #17a2b8;
 }
 
 .error-item .line-link {

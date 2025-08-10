@@ -4,7 +4,7 @@ export interface ParsedError {
   message: string;
   line: number;
   column?: number;
-  severity: 'error' | 'warning' | 'info';
+  severity: 'error';
 }
 
 // Get the number of lines in the injected header for line offset calculations
@@ -130,7 +130,6 @@ export function parseWebGPUErrors(errorMessage: string, headerLineOffset: number
     while ((match = pattern.exec(errorMessage)) !== null) {
       let line: number;
       let column: number | undefined;
-      let severity: 'error' | 'warning' | 'info' = 'error';
       let message: string;
 
       // Handle different capture group patterns based on the match structure
@@ -139,26 +138,22 @@ export function parseWebGPUErrors(errorMessage: string, headerLineOffset: number
         line = parseInt(match[1], 10);
         column = parseInt(match[2], 10);
         message = match[3].trim();
-        severity = 'error';
       } else if (match[0].includes('. Line:') || match[0].includes('.. Line:')) {
         // Parser error: "Expected ')' for argument list. Line:3"
         message = match[1].trim();
         line = parseInt(match[2], 10);
-        severity = 'error';
       } else if (match[0].includes('at line') && !match[0].includes('[error]')) {
         // Pattern: "Expected ';' after statement at line 6" (but not compilation errors)
         message = match[1].trim();
         line = parseInt(match[2], 10);
-        severity = 'error';
       } else if (match[0].includes('error:') && match[0].includes('at line')) {
         // Pattern: "error: undeclared identifier 'variable' at line 4"
         message = match[1].trim();
         line = parseInt(match[2], 10);
-      } else if (match.length === 5 && match[3] && /^(error|warning|info)$/i.test(match[3])) {
-        // Pattern with line, column, severity, and message: "15:5 - error: message"
+      } else if (match.length === 5 && match[3] && /^error$/i.test(match[3])) {
+        // Pattern with line, column, and error message: "15:5 - error: message"
         line = parseInt(match[1], 10);
         column = parseInt(match[2], 10);
-        severity = match[3].toLowerCase() as 'error' | 'warning' | 'info';
         message = match[4].trim();
       } else if (match.length >= 4 && match[2] && /^\d+$/.test(match[2])) {
         // Pattern with line and column: "at line 15, column 8: message"
@@ -193,7 +188,7 @@ export function parseWebGPUErrors(errorMessage: string, headerLineOffset: number
         errors.push({
           line: adjustedLine,
           column,
-          severity,
+          severity: 'error',
           message: cleanErrorMessage(message)
         });
 
