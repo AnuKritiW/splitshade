@@ -10,12 +10,13 @@ jobs:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: '22' # https://github.com/actions/node-versions/releases
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
