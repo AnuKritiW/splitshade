@@ -59,44 +59,68 @@ export function parseWebGPUErrors(errorMessage: string, headerLineOffset: number
 
   if (!errorMessage) return errors;
 
-  // Skip success messages and informational messages - don't treat them as errors
-  const nonErrorPatterns = [
-    /compiled\s+and\s+executed\s+successfully/i,
-    /successfully/i,
-    /shader\s+compiled/i,
-    /compilation\s+successful/i,
-    /no\s+errors/i,
-    /detected\s+shader\s+type/i,
-    /initializing\s+webgpu/i,
-    /creating\s+/i,
-    /loaded\s+/i,
-    /texture\s+provided/i,
-    /^shader\s+type:/i,
-    /^webgpu\s+/i
-  ];
+  // Check if the message contains actual errors, even if it also has success messages
+  const hasErrors = errorMessage.includes('[error]') ||
+                   errorMessage.includes('error:') ||
+                   errorMessage.includes('compilation failed') ||
+                   errorMessage.includes('Invalid') ||
+                   errorMessage.includes('Expected');
 
-  for (const pattern of nonErrorPatterns) {
-    if (pattern.test(errorMessage)) {
-      return errors; // Return empty array for non-error messages
+  if (!hasErrors) {
+    // Skip success messages and informational messages - don't treat them as errors
+    const nonErrorPatterns = [
+      /compiled\s+and\s+executed\s+successfully/i,
+      /successfully/i,
+      /shader\s+compiled/i,
+      /compilation\s+successful/i,
+      /no\s+errors/i,
+      /detected\s+shader\s+type/i,
+      /initializing\s+webgpu/i,
+      /creating\s+/i,
+      /loaded\s+/i,
+      /texture\s+provided/i,
+      /^shader\s+type:/i,
+      /^webgpu\s+/i
+    ];
+
+    for (const pattern of nonErrorPatterns) {
+      if (pattern.test(errorMessage)) {
+        return errors; // Return empty array for non-error messages
+      }
     }
   }
 
-  // Common WebGPU error patterns
+  // Common WebGPU and parser error patterns
   const patterns = [
-    // Pattern for errors like: "shader compilation failed at line 15, column 5: error message"
+    // Pattern for WebGPU compilation errors: "[error] L17:39 unresolved value 'undefinedVariable'"
+    /\[error\]\s*L(\d+):(\d+)\s+(.+)/gi,
+
+    // Pattern for parser errors: "Expected ')' for argument list. Line:3"
+    /(.+?)\.\s*Line:(\d+)/gi,
+
+    // Pattern for parser errors with double dots: "Expected ';' after statement.. Line:6"
+    /(.+?)\.\.\s*Line:(\d+)/gi,
+
+    // Pattern for errors: "shader compilation failed at line 15, column 5: error message"
     /(?:shader\s+)?(?:compilation\s+)?(?:failed\s+)?(?:at\s+)?line\s*[:\s]\s*(\d+)(?:,?\s*column\s*[:\s]\s*(\d+))?\s*[:\s]\s*(.+)/gi,
 
-    // Pattern for errors like: "15:5 - error: message"
+    // Pattern for errors: "15:5 - error: message"
     /(\d+):(\d+)\s*-\s*(error|warning|info)\s*:\s*(.+)/gi,
 
-    // Pattern for errors like: "Line 15: error message" (but not success messages)
+    // Pattern for compilation errors: "error: undeclared identifier 'variable' at line 4"
+    /error\s*:\s*(.+?)\s+at\s+line\s+(\d+)/gi,
+
+    // Pattern for errors: "at line 15, column 8: undeclared identifier"
+    /at\s+line\s+(\d+)(?:,\s*column\s+(\d+))?\s*:\s*(.+)/gi,
+
+    // Pattern for errors: "Line 15: error message"
     /line\s+(\d+)\s*:\s*(?!.*success)(.+)/gi,
 
-    // Pattern for errors like: "15: error message"
+    // Pattern for errors: "15: error message"
     /^(\d+)\s*:\s*(.+)/gmi,
 
-    // Pattern for errors with line references: "at line 15" (but not success messages)
-    /at\s+line\s+(\d+)(?:\s*:\s*(?!.*success)(.+))?/gi,
+    // Pattern for general error messages with line numbers
+    /(\d+)\s*:\s*(.+)/gi,
   ];
 
   for (const pattern of patterns) {
@@ -104,29 +128,67 @@ export function parseWebGPUErrors(errorMessage: string, headerLineOffset: number
     pattern.lastIndex = 0; // Reset regex state
 
     while ((match = pattern.exec(errorMessage)) !== null) {
-      const line = parseInt(match[1], 10);
+      let line: number;
       let column: number | undefined;
       let severity: 'error' | 'warning' | 'info' = 'error';
       let message: string;
 
-      // Handle different capture group patterns
-      if (match.length === 4 && match[2] && /^\d+$/.test(match[2])) {
-        // Pattern with line and column
+      // Handle different capture group patterns based on the match structure
+      if (match[0].includes('[error]') && match[0].includes('L')) {
+        // WebGPU compilation error: "[error] L17:39 unresolved value 'undefinedVariable'"
+        line = parseInt(match[1], 10);
         column = parseInt(match[2], 10);
         message = match[3].trim();
-      } else if (match.length === 5) {
-        // Pattern with line, column, severity, and message
+        severity = 'error';
+      } else if (match[0].includes('. Line:') || match[0].includes('.. Line:')) {
+        // Parser error: "Expected ')' for argument list. Line:3"
+        message = match[1].trim();
+        line = parseInt(match[2], 10);
+        severity = 'error';
+      } else if (match[0].includes('at line') && !match[0].includes('[error]')) {
+        // Pattern: "Expected ';' after statement at line 6" (but not compilation errors)
+        message = match[1].trim();
+        line = parseInt(match[2], 10);
+        severity = 'error';
+      } else if (match[0].includes('error:') && match[0].includes('at line')) {
+        // Pattern: "error: undeclared identifier 'variable' at line 4"
+        message = match[1].trim();
+        line = parseInt(match[2], 10);
+      } else if (match.length === 5 && match[3] && /^(error|warning|info)$/i.test(match[3])) {
+        // Pattern with line, column, severity, and message: "15:5 - error: message"
+        line = parseInt(match[1], 10);
         column = parseInt(match[2], 10);
         severity = match[3].toLowerCase() as 'error' | 'warning' | 'info';
         message = match[4].trim();
-      } else {
-        // Pattern with just line and message
+      } else if (match.length >= 4 && match[2] && /^\d+$/.test(match[2])) {
+        // Pattern with line and column: "at line 15, column 8: message"
+        line = parseInt(match[1], 10);
+        column = parseInt(match[2], 10);
+        message = match[3].trim();
+      } else if (match.length >= 3) {
+        // Pattern with line and message: "line 15: message" or "15: message"
+        line = parseInt(match[1], 10);
         message = (match[2] || match[3] || '').trim();
+      } else {
+        continue; // Skip if we can't parse it properly
       }
 
       if (line > 0 && message) {
-        // Adjust line number to account for injected header
-        const adjustedLine = Math.max(1, line - headerLineOffset);
+        let adjustedLine = line;
+
+        // Only apply header offset for WebGPU compilation errors
+        // Parser errors (syntax errors) are already relative to user code
+        const isCompilationError = match[0].includes('[error]') ||
+                                  match[0].includes('compilation') ||
+                                  match[0].includes('unresolved') ||
+                                  match[0].includes('Invalid');
+
+        if (isCompilationError) {
+          adjustedLine = Math.max(1, line - headerLineOffset);
+          console.log(`Compilation error - Line adjustment: original=${line}, offset=${headerLineOffset}, adjusted=${adjustedLine}`);
+        } else {
+          console.log(`Parser error - Using original line: ${line}`);
+        }
 
         errors.push({
           line: adjustedLine,
@@ -134,7 +196,16 @@ export function parseWebGPUErrors(errorMessage: string, headerLineOffset: number
           severity,
           message: cleanErrorMessage(message)
         });
+
+        // Break out of pattern loop once we've found and processed errors
+        // This prevents multiple patterns from matching the same error
+        break;
       }
+    }
+
+    // If we found errors with this pattern, don't try other patterns
+    if (errors.length > 0) {
+      break;
     }
   }
 

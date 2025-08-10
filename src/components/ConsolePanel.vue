@@ -2,7 +2,33 @@
   <!-- Console (bottom-right) -->
   <n-card title="Console" size="small" class="panel panel-console" style="grid-row: 2; grid-column: 2;">
     <div class="console-content">
-      <div class="console-pre">
+      <!-- Structured error display -->
+      <div v-if="structuredErrors.length > 0" class="structured-errors">
+        <div v-for="(error, index) in structuredErrors" :key="index"
+             class="error-item"
+             :class="error.severity">
+          <div class="error-header">
+            <n-tag
+              :type="error.severity === 'error' ? 'error' : error.severity === 'warning' ? 'warning' : 'info'"
+              size="small"
+            >
+              {{ error.severity.toUpperCase() }}
+            </n-tag>
+            <button
+              class="line-link"
+              type="button"
+              @click="emit('go-to-line', error.line)"
+              :title="`Jump to line ${error.line}`"
+            >
+              Line {{ error.line }}{{ error.column ? `:${error.column}` : '' }}
+            </button>
+          </div>
+          <div class="error-message">{{ error.message }}</div>
+        </div>
+      </div>
+
+      <!-- Enhanced console output for compilation errors and fallback -->
+      <div v-else class="console-pre">
         <template v-for="(t, i) in tokens" :key="i">
           <!-- Line link -->
           <button
@@ -14,8 +40,8 @@
           >
             L{{ t.num }}
           </button>
-          <!-- Plain text -->
-          <span v-else>{{ t.text }}</span>
+          <!-- Compilation error styling for error messages -->
+          <span v-else :class="{ 'compilation-error': isCompilationError(t.text) }">{{ t.text }}</span>
         </template>
       </div>
     </div>
@@ -24,7 +50,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { getHeaderLineOffset } from '../webgpu/parser';
+import { getHeaderLineOffset, parseWebGPUErrors, type ParsedError } from '../webgpu/parser';
 
 const props = defineProps<{
   consoleOutput: string
@@ -33,6 +59,29 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'go-to-line', line: number): void
 }>()
+
+// Parse console output into structured errors when possible
+const structuredErrors = computed(() => {
+  if (!props.consoleOutput) return [];
+
+  // Always try to parse errors, even if there are success messages mixed in
+  // We'll filter out purely success messages later
+  const headerOffset = getHeaderLineOffset();
+  const errors = parseWebGPUErrors(props.consoleOutput, headerOffset);
+
+  // Return structured errors if we found any meaningful ones
+  return errors.filter(e => e.message && e.message.length > 0);
+});
+
+// Helper to identify compilation errors in console text
+function isCompilationError(text: string): boolean {
+  return text.includes('compilation failed') ||
+         text.includes('Shader compilation error') ||
+         text.includes('error:') ||
+         text.includes('WebGPU Error') ||
+         text.includes('Invalid') ||
+         /line \d+/.test(text);
+}
 
 // Parse console output for line references - keep it simple
 const tokens = computed(() => {
@@ -133,6 +182,7 @@ const tokens = computed(() => {
   cursor: pointer;
   text-decoration: underline;
   color: #4080ff;
+  flex-shrink: 0;
 }
 
 .line-link:hover {
@@ -140,44 +190,32 @@ const tokens = computed(() => {
 }
 
 /* Error styling */
-.error-item {
+.structured-errors .error-item {
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  margin: 4px 0;
-  padding: 8px;
-  border-radius: 4px;
-  border-left: 3px solid;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0;
+  padding: 12px;
+  border-radius: 6px;
+  border-left: 4px solid;
 }
 
-.error-item.error {
-  background-color: rgba(255, 99, 99, 0.1);
+.structured-errors .error-item.error {
+  background-color: rgba(255, 99, 99, 0.15);
   border-left-color: #ff6363;
 }
 
-.error-item.warning {
-  background-color: rgba(255, 193, 7, 0.1);
+.structured-errors .error-item.warning {
+  background-color: rgba(255, 193, 7, 0.15);
   border-left-color: #ffc107;
 }
 
-.error-item.info {
-  background-color: rgba(23, 162, 184, 0.1);
+.structured-errors .error-item.info {
+  background-color: rgba(23, 162, 184, 0.15);
   border-left-color: #17a2b8;
 }
 
-.error-icon {
-  flex-shrink: 0;
-  font-size: 14px;
-}
-
-.error-message {
-  flex: 1;
-  font-size: 13px;
-  line-height: 1.4;
-}
-
 .error-item .line-link {
-  flex-shrink: 0;
   font-weight: 500;
   color: inherit;
   opacity: 0.8;
@@ -185,5 +223,36 @@ const tokens = computed(() => {
 
 .error-item .line-link:hover {
   opacity: 1;
+  background-color: transparent;
+}
+
+.structured-errors {
+  padding: 4px 0;
+}
+
+.error-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.error-message {
+  padding-left: 16px;
+  font-family: 'Monaco', 'Consolas', monospace;
+  font-size: 12px;
+  color: #ccc;
+  line-height: 1.4;
+}
+
+/* Compilation error styling for raw console output */
+.compilation-error {
+  background-color: rgba(255, 99, 99, 0.1);
+  border-left: 3px solid #ff6363;
+  padding: 4px 8px;
+  margin: 2px 0;
+  border-radius: 4px;
+  display: block;
+  line-height: 1.4;
 }
 </style>
