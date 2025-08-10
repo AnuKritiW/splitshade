@@ -124,9 +124,6 @@ const tokens = computed(() => {
     let adjustedLine = originalLine;
     if (isCompilationError && !isSyntaxError) {
       adjustedLine = Math.max(1, originalLine - headerOffset);
-      console.log(`Adjusted compilation error line: ${originalLine} -> ${adjustedLine}`);
-    } else {
-      console.log(`Keeping syntax error line unchanged: ${originalLine}`);
     }
 
     out.push({ kind: 'line', num: adjustedLine });

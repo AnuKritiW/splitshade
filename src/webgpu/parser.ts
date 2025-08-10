@@ -179,9 +179,6 @@ export function parseWebGPUErrors(errorMessage: string, headerLineOffset: number
 
         if (isCompilationError) {
           adjustedLine = Math.max(1, line - headerLineOffset);
-          console.log(`Compilation error - Line adjustment: original=${line}, offset=${headerLineOffset}, adjusted=${adjustedLine}`);
-        } else {
-          console.log(`Parser error - Using original line: ${line}`);
         }
 
         errors.push({
