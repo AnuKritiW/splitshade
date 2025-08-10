@@ -1,0 +1,88 @@
+@startuml
+' !theme aws-orange
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 20
+skinparam maxmessagesize 60
+
+title Frame Loop and Input Flow - Splitshade WebGPU
+
+participant "Browser" as Browser
+participant "Canvas Events" as Events
+participant "Frame Function" as Frame
+participant "Mouse State" as Mouse
+participant "Time Calculation" as Time
+participant "GPU Queue" as Queue
+participant "Render Pass" as Render
+participant "Shader Uniforms" as Uniforms
+
+== Initialization ==
+Browser -> Frame : requestAnimationFrame(frame)
+activate Frame
+
+== Per-Frame Loop ==
+loop Every Frame (60 FPS)
+    Frame -> Frame : Check device exists
+
+    == Time Update ==
+    Frame -> Time : performance.now()
+    Time -> Frame : current timestamp
+    Frame -> Frame : elapsed = (now - startTime) / 1000.0
+    Frame -> Queue : writeBuffer(timeBuffer, elapsed)
+    Queue -> Uniforms : iTime updated
+
+    == Mouse Input Processing ==
+    Events -> Mouse : mousemove event
+    Events -> Mouse : mousedown/mouseup events
+    Mouse -> Mouse : Update { x, y, down }
+
+    Frame -> Mouse : Read current state
+    Mouse -> Frame : { x, y, down, padding }
+    Frame -> Queue : writeBuffer(mouseBuffer, mouseVec4)
+    Queue -> Uniforms : iMouse updated
+
+    == Render Execution ==
+    Frame -> Render : runRenderPass(device, context, pipeline, bindGroup)
+    activate Render
+
+    Render -> Queue : createCommandEncoder()
+    Render -> Queue : beginRenderPass()
+    Render -> Queue : setPipeline(pipeline)
+    Render -> Queue : setBindGroup(0, bindGroup)
+
+    alt Has Vertex Data
+        Render -> Queue : setVertexBuffer(0, vertexBuffer)
+        Render -> Queue : draw(vertexCount, 1, 0, 0)
+    else Fullscreen Triangle
+        Render -> Queue : draw(3, 1, 0, 0)
+    end
+
+    Render -> Queue : end()
+    Render -> Queue : submit([encoder.finish()])
+    Queue -> Uniforms : Execute shader with updated uniforms
+
+    deactivate Render
+
+    == Next Frame Setup ==
+    Frame -> Browser : requestAnimationFrame(frame)
+    note right : Continues the loop
+end
+
+== Event Handlers (Async) ==
+Events -> Mouse : addEventListener("mousemove")
+Events -> Mouse : addEventListener("mousedown") 
+Events -> Mouse : addEventListener("mouseup")
+
+note over Frame
+  Frame function runs at ~60 FPS
+  Updates iTime and iMouse every frame
+  Executes shader with fresh uniform data
+end note
+
+note over Queue
+  GPU Queue handles:
+  - Uniform buffer updates
+  - Command submission
+  - Render pass execution
+end note
+
+@enduml

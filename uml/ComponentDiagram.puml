@@ -1,0 +1,85 @@
+@startuml
+' !theme aws-orange
+skinparam componentStyle rectangle
+
+title WebGPU Pipeline Architecture - Splitshade
+
+package "Core WebGPU Modules" {
+  [context.ts] as Context
+  [renderer.ts] as Renderer
+  [parser.ts] as Parser
+}
+
+package "Pipeline Components" {
+  [shaders.ts] as Shaders
+  [uniforms.ts] as Uniforms
+  [textures.ts] as Textures
+  [pipeline.ts] as Pipeline
+}
+
+package "WebGPU Resources" {
+  [Vertex Shader Module] as VertexShaderModule
+  [Fragment Shader Module] as FragmentShaderModule
+  [GPUBindGroup] as BindGroup
+  [GPURenderPipeline] as RenderPipeline
+  [GPUBuffer] as Buffer
+  [GPUTexture] as Texture
+  [GPUDevice] as Device
+}
+
+package "Input/Output" {
+  component "WGSL Code" as WGSL
+  component "Canvas Context" as Canvas
+  component "Rendered Frame" as Frame
+}
+
+' Main flow
+WGSL --> Parser : parseWGSL()
+Parser --> Renderer : parsed data
+
+' Renderer uses context for setup
+Renderer --> Context : getWebGPUDevice()
+Renderer --> Context : configureCanvasContext()
+
+' Context setup (what context.ts provides)
+Context --> Device : getWebGPUDevice()
+Context --> Canvas : configureCanvasContext()
+
+' Renderer orchestrates everything
+Renderer --> Shaders : compileShaderModule()
+Renderer --> Uniforms : createUniforms()
+Renderer --> Textures : loadDefaultTexture()
+Renderer --> Pipeline : createPipeline()
+
+' Resource creation
+Shaders --> VertexShaderModule : fullscreenVertexWGSL
+Shaders --> FragmentShaderModule : user WGSL code
+Uniforms --> BindGroup : uniform buffers
+Uniforms --> Buffer : time, resolution, etc.
+Textures --> Texture : default/loaded textures
+Pipeline --> RenderPipeline : final pipeline
+
+' Dependencies for pipeline creation
+VertexShaderModule --> RenderPipeline
+FragmentShaderModule --> RenderPipeline
+BindGroup --> RenderPipeline
+Buffer --> BindGroup
+Texture --> BindGroup
+
+' Final rendering
+RenderPipeline --> Frame : runRenderPass()
+Canvas --> Frame
+
+note right of Renderer
+  Main orchestrator that:
+  - Manages render loop
+  - Coordinates all modules
+  - Handles user shader compilation
+end note
+
+note bottom of Context
+  Singleton pattern ensures
+  single GPU device instance
+end note
+
+@enduml
