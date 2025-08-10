@@ -13,8 +13,8 @@
             <button
               class="line-link"
               type="button"
-              @click="emit('go-to-line', error.line)"
-              :title="`Jump to line ${error.line}`"
+              @click="emit('go-to-line', error.line, error.column)"
+              :title="`Jump to line ${error.line}${error.column ? `, column ${error.column}` : ''}`"
             >
               Line {{ error.line }}{{ error.column ? `:${error.column}` : '' }}
             </button>
@@ -31,7 +31,7 @@
             v-if="t.kind === 'line'"
             class="line-link"
             type="button"
-            @click="emit('go-to-line', t.num)"
+            @click="emit('go-to-line', t.num, undefined)"
             :title="`Jump to line ${t.num}`"
           >
             L{{ t.num }}
@@ -53,7 +53,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'go-to-line', line: number): void
+  (e: 'go-to-line', line: number, column?: number): void
 }>()
 
 // Parse console output into structured errors when possible

@@ -68,10 +68,10 @@ function handleRunShader() {
   })
 }
 
-function handleGoToLine(line: number) {
-  console.log(`App.vue: navigating to line ${line}`);
+function handleGoToLine(line: number, column?: number) {
+  console.log(`App.vue: navigating to line ${line}${column ? `, column ${column}` : ''}`);
   if (editorRef.value) {
-    editorRef.value.goToLine(line)
+    editorRef.value.goToLine(line, column)
   }
 }
 </script>

@@ -64,11 +64,11 @@ function onEditorMount(editor: monaco.editor.IStandaloneCodeEditor) {
   editorInstance = editor
 }
 
-// Method to programmatically go to a specific line
-function goToLine(lineNumber: number) {
+// Method to programmatically go to a specific line and optionally column
+function goToLine(lineNumber: number, column?: number) {
   if (editorInstance) {
     editorInstance.revealLineInCenter(lineNumber)
-    editorInstance.setPosition({ lineNumber, column: 1 })
+    editorInstance.setPosition({ lineNumber, column: column || 1 })
     editorInstance.focus()
   }
 }
