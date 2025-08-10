@@ -44,6 +44,7 @@ loader.config({
 })
 
 const previewRef = ref<InstanceType<typeof PreviewPanel> | null>(null)
+const editorRef = ref<InstanceType<typeof EditorPanel> | null>(null)
 const consoleOutput = ref("")
 
 const { runShader } = useShaderRunner()
@@ -65,6 +66,13 @@ function handleRunShader() {
       consoleOutput.value += (msg || 'Compiled successfully') + '\n'
     }
   })
+}
+
+function handleGoToLine(line: number, column?: number) {
+  console.log(`App.vue: navigating to line ${line}${column ? `, column ${column}` : ''}`);
+  if (editorRef.value) {
+    editorRef.value.goToLine(line, column)
+  }
 }
 </script>
 
@@ -107,7 +115,12 @@ function handleRunShader() {
 
       <div class="grid-container">
         <!-- Editor (top-left) -->
-        <EditorPanel v-model:code="code" :runShader="handleRunShader" />
+        <EditorPanel
+          ref="editorRef"
+          v-model:code="code"
+          :runShader="handleRunShader"
+          @go-to-line="handleGoToLine"
+        />
 
         <!-- Preview (top-right) -->
          <PreviewPanel ref="previewRef" style="grid-row: 1; grid-column: 2;" />
@@ -136,6 +149,7 @@ function handleRunShader() {
         <!-- Console (bottom-right) -->
         <ConsolePanel
           :console-output="consoleOutput"
+          @go-to-line="handleGoToLine"
           style="grid-row: 2; grid-column: 2;"
         />
 
