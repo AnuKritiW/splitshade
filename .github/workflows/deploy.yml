@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main] # runs after a PR is merged to main
+    branches: [main, ci/github-actions] # runs after a PR is merged to main
 
 permissions:
   contents: write # needed to push to gh-pages
@@ -40,5 +40,6 @@ jobs:
 
       - name: Deploy (gh-pages)
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run deploy
