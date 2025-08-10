@@ -32,8 +32,13 @@ jobs:
       - name: Build
         run: npm run build
 
+      # retrieved from https://github.com/orgs/community/discussions/26560
+      - name: Git identity (use bot)
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+
       - name: Deploy (gh-pages)
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run deploy
