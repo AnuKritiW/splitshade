@@ -4,7 +4,6 @@ export interface ParsedError {
   message: string;
   line: number;
   column?: number;
-  severity: 'error';
 }
 
 // Get the number of lines in the injected header for line offset calculations
@@ -188,7 +187,6 @@ export function parseWebGPUErrors(errorMessage: string, headerLineOffset: number
         errors.push({
           line: adjustedLine,
           column,
-          severity: 'error',
           message: cleanErrorMessage(message)
         });
 
@@ -217,7 +215,6 @@ export function parseWebGPUErrors(errorMessage: string, headerLineOffset: number
 
         errors.push({
           line: adjustedLine,
-          severity: 'error',
           message: errorMessage.trim()
         });
         break; // Only add one generic error
@@ -229,7 +226,6 @@ export function parseWebGPUErrors(errorMessage: string, headerLineOffset: number
   if (errors.length === 0 && errorMessage.trim()) {
     errors.push({
       line: 1,
-      severity: 'error',
       message: errorMessage.trim()
     });
   }
