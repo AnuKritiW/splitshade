@@ -56,6 +56,19 @@ const emit = defineEmits<{
   (e: 'go-to-line', line: number, column?: number): void
 }>()
 
+const STATUS_MESSAGE_PATTERNS = [
+  'Detected shader type',
+  'Shader compiled',
+  'Successfully',
+  'Initializing'
+] as const;
+
+// Helper function to check if text contains any status message pattern
+function containsStatusPattern(text: string): boolean {
+  const trimmedText = text.trim();
+  return STATUS_MESSAGE_PATTERNS.some(pattern => trimmedText.includes(pattern));
+}
+
 // Parse console output into structured errors when possible
 const structuredErrors = computed(() => {
   if (!props.consoleOutput) return [];
@@ -71,11 +84,7 @@ const structuredErrors = computed(() => {
 
 // Check if a line is a status/informational message
 function isStatusMessage(text: string): boolean {
-  const trimmedText = text.trim();
-  return trimmedText.includes('Detected shader type') ||
-         trimmedText.includes('Shader compiled') ||
-         trimmedText.includes('Successfully') ||
-         trimmedText.includes('Initializing');
+  return containsStatusPattern(text);
 }
 
 // Extract status/informational messages to always show above the line
@@ -86,11 +95,7 @@ const statusOutput = computed(() => {
   const lines = props.consoleOutput.split('\n');
   const statusLines = lines.filter(line => {
     const trimmedLine = line.trim();
-    return trimmedLine &&
-           (trimmedLine.includes('Detected shader type') ||
-            trimmedLine.includes('Shader compiled') ||
-            trimmedLine.includes('Successfully') ||
-            trimmedLine.includes('Initializing'));
+    return trimmedLine && containsStatusPattern(line);
   });
 
   return statusLines.join('\n');
