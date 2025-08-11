@@ -3,6 +3,15 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main] # runs after a PR is merged to main
+    paths:
+      - 'src/**'            # app code
+      - 'public/**'         # static assets
+      - 'index.html'        # Vite entry
+      - 'vite.config.ts'    # build config
+      - 'package.json'      # deps/scripts can change output
+      - 'package-lock.json' # lockfile updates can change output
+      - 'tsconfig*.json'    # TS config may affect build
+  workflow_dispatch: {}     # manual redeploy when needed
 
 permissions:
   contents: write # needed to push to gh-pages
