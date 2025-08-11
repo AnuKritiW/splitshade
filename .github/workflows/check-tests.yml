@@ -3,13 +3,37 @@ name: Run Unit Tests
 on:
   push:
     branches: [main]
+    paths:
+      - 'src/**'            # app code
+      - 'public/**'         # static assets
+      - 'index.html'        # Vite entry
+      - 'vite.config.ts'    # build config
+      - 'package.json'      # deps/scripts can change output
+      - 'package-lock.json' # lockfile updates can change output
+      - 'tsconfig*.json'    # TS config may affect build
+      - 'tests/**'          # tests change
   pull_request:
     types: [opened, synchronize, ready_for_review]
     branches: [main]
+    paths:
+      - 'src/**'            # app code
+      - 'public/**'         # static assets
+      - 'index.html'        # Vite entry
+      - 'vite.config.ts'    # build config
+      - 'package.json'      # deps/scripts can change output
+      - 'package-lock.json' # lockfile updates can change output
+      - 'tsconfig*.json'    # TS config may affect build
+      - 'tests/**'          # tests change
+  workflow_dispatch: {}     # manual run when needed
+
+# auto-cancels older runs if new commits are pushed to the same PR
+concurrency:
+  group: tests-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('ref-{0}', github.ref) }}
+  cancel-in-progress: true
 
 jobs:
   test:
-    if: github.event.pull_request.draft == false
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
 
     strategy:
