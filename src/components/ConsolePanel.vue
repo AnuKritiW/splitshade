@@ -63,10 +63,32 @@ const STATUS_MESSAGE_PATTERNS = [
   'Initializing'
 ] as const;
 
+const COMPILATION_ERROR_PATTERNS = [
+  'compilation',
+  'shader failed',
+  'Invalid',
+  'error:'
+] as const;
+
+const SYNTAX_ERROR_PATTERNS = [
+  'Syntax error',
+  'Expected'
+] as const;
+
 // Helper function to check if text contains any status message pattern
 function containsStatusPattern(text: string): boolean {
   const trimmedText = text.trim();
   return STATUS_MESSAGE_PATTERNS.some(pattern => trimmedText.includes(pattern));
+}
+
+// Helper function to check if text contains compilation error patterns
+function containsCompilationErrorPattern(context: string): boolean {
+  return COMPILATION_ERROR_PATTERNS.some(pattern => context.includes(pattern));
+}
+
+// Helper function to check if text contains syntax error patterns
+function containsSyntaxErrorPattern(context: string): boolean {
+  return SYNTAX_ERROR_PATTERNS.some(pattern => context.includes(pattern));
 }
 
 // Parse console output into structured errors when possible
@@ -132,15 +154,11 @@ const tokens = computed(() => {
     const context = props.consoleOutput.slice(contextStart, contextEnd);
 
     // Compilation errors from WebGPU typically contain these patterns
-    const isCompilationError = context.includes('compilation') ||
-                              context.includes('shader failed') ||
-                              context.includes('Invalid') ||
-                              context.includes('error:') ||
+    const isCompilationError = containsCompilationErrorPattern(context) ||
                               (originalLine > headerOffset); // If line number is beyond header, likely compilation error
 
     // Syntax errors from Monaco typically appear as "Syntax error at line X" with lower line numbers
-    const isSyntaxError = context.includes('Syntax error') ||
-                         context.includes('Expected') ||
+    const isSyntaxError = containsSyntaxErrorPattern(context) ||
                          (originalLine <= headerOffset && !isCompilationError);
 
     // Adjust line number for compilation errors only

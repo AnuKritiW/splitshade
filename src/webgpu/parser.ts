@@ -6,6 +6,33 @@ export interface ParsedError {
   column?: number;
 }
 
+// Define error detection patterns for reuse
+const ERROR_DETECTION_PATTERNS = [
+  '[error]',
+  'error:',
+  'WebGPU Error',
+  'compilation failed',
+  'Invalid',
+  'Expected'
+] as const;
+
+const COMPILATION_ERROR_PATTERNS = [
+  '[error]',
+  'compilation',
+  'unresolved',
+  'Invalid'
+] as const;
+
+// Helper function to check if text contains error patterns
+function containsErrorPattern(text: string): boolean {
+  return ERROR_DETECTION_PATTERNS.some(pattern => text.includes(pattern));
+}
+
+// Helper function to check if text contains compilation error patterns
+function containsCompilationError(text: string): boolean {
+  return COMPILATION_ERROR_PATTERNS.some(pattern => text.includes(pattern));
+}
+
 // Get the number of lines in the injected header for line offset calculations
 export function getHeaderLineOffset(usesTextures: boolean = true): number {
   if (usesTextures) {
@@ -62,12 +89,7 @@ export function parseWebGPUErrors(errorMessage: string, headerLineOffset: number
   if (!errorMessage) return errors;
 
   // Check if the message contains actual errors, even if it also has success messages
-  const hasErrors = errorMessage.includes('[error]') ||
-                   errorMessage.includes('error:') ||
-                   errorMessage.includes('WebGPU Error') ||
-                   errorMessage.includes('compilation failed') ||
-                   errorMessage.includes('Invalid') ||
-                   errorMessage.includes('Expected');
+  const hasErrors = containsErrorPattern(errorMessage);
 
   if (!hasErrors) {
     // Skip success messages and informational messages - don't treat them as errors
@@ -176,10 +198,7 @@ export function parseWebGPUErrors(errorMessage: string, headerLineOffset: number
 
         // Only apply header offset for WebGPU compilation errors
         // Parser errors (syntax errors) are already relative to user code
-        const isCompilationError = match[0].includes('[error]') ||
-                                  match[0].includes('compilation') ||
-                                  match[0].includes('unresolved') ||
-                                  match[0].includes('Invalid');
+        const isCompilationError = containsCompilationError(match[0]);
 
         if (isCompilationError) {
           adjustedLine = Math.max(1, line - headerLineOffset);
