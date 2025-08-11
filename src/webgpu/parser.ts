@@ -64,6 +64,7 @@ export function parseWebGPUErrors(errorMessage: string, headerLineOffset: number
   // Check if the message contains actual errors, even if it also has success messages
   const hasErrors = errorMessage.includes('[error]') ||
                    errorMessage.includes('error:') ||
+                   errorMessage.includes('WebGPU Error') ||
                    errorMessage.includes('compilation failed') ||
                    errorMessage.includes('Invalid') ||
                    errorMessage.includes('Expected');
@@ -224,9 +225,15 @@ export function parseWebGPUErrors(errorMessage: string, headerLineOffset: number
 
   // If still no errors but we have an error message, add a generic error at line 1
   if (errors.length === 0 && errorMessage.trim()) {
+    // Extract just the error part, removing informational messages
+    const cleanedMessage = cleanErrorMessage(errorMessage)
+      .replace(/^.*?Detected shader type:.*?(?=WebGPU Error|error:|Invalid|compilation failed)/s, '')
+      .replace(/^.*?(?=WebGPU Error|error:|Invalid|compilation failed)/s, '')
+      .trim();
+
     errors.push({
       line: 1,
-      message: errorMessage.trim()
+      message: cleanedMessage || errorMessage.trim()
     });
   }
 
@@ -236,6 +243,9 @@ export function parseWebGPUErrors(errorMessage: string, headerLineOffset: number
 // Clean up error messages by removing redundant information
 function cleanErrorMessage(message: string): string {
   return message
+    // Remove informational prefixes that appear before errors
+    .replace(/^.*?Detected shader type:.*?(?=WebGPU Error|error:|Invalid|compilation failed)/s, '')
+    .replace(/^.*?(?=WebGPU Error|error:|Invalid|compilation failed)/s, '')
     // Remove line/column references that are now handled separately
     .replace(/(?:at\s+)?line\s+\d+(?:,?\s*column\s+\d+)?[:\s]*/gi, '')
     .replace(/^\d+:\d+\s*-\s*(?:error|warning|info)\s*:\s*/gi, '')

@@ -3,6 +3,11 @@
   <n-card title="Console" size="small" class="panel-console" style="grid-row: 2; grid-column: 2;">
     <n-scrollbar style="max-height: 100%;">
       <div class="console-content">
+      <!-- Always show raw console output first for context -->
+      <div v-if="nonErrorOutput" class="console-pre non-error-output">
+        {{ nonErrorOutput }}
+      </div>
+
       <!-- Structured error display -->
       <div v-if="structuredErrors.length > 0" class="structured-errors">
         <div v-for="(error, index) in structuredErrors" :key="index"
@@ -71,6 +76,27 @@ const structuredErrors = computed(() => {
 
   // Return structured errors if we found any meaningful ones
   return errors.filter(e => e.message && e.message.length > 0);
+});
+
+// Extract non-error output (informational messages) to show alongside structured errors
+const nonErrorOutput = computed(() => {
+  if (!props.consoleOutput || structuredErrors.value.length === 0) return '';
+
+  // Extract lines that are informational (not error content)
+  const lines = props.consoleOutput.split('\n');
+  const infoLines = lines.filter(line => {
+    const trimmedLine = line.trim();
+    return trimmedLine &&
+           !trimmedLine.includes('WebGPU Error') &&
+           !trimmedLine.includes('While validating') &&
+           !trimmedLine.includes('While calling') &&
+           (trimmedLine.includes('Detected shader type') ||
+            trimmedLine.includes('Shader compiled') ||
+            trimmedLine.includes('Successfully') ||
+            trimmedLine.includes('Initializing'));
+  });
+
+  return infoLines.join('\n');
 });
 
 // Helper to identify compilation errors in console text
@@ -173,6 +199,15 @@ const tokens = computed(() => {
   flex: 1 !important;
   padding-bottom: 16px;
   max-width: 100%;      /* ensure content doesn't exceed panel width */
+}
+
+/* Non-error output styling */
+.non-error-output {
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #888;
+  font-size: 0.9em;
 }
 .console-pre {
   margin: 0;
