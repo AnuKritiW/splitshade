@@ -75,20 +75,10 @@ const SYNTAX_ERROR_PATTERNS = [
   'Expected'
 ] as const;
 
-// Helper function to check if text contains any status message pattern
-function containsStatusPattern(text: string): boolean {
+// Generic helper function to check if text contains any pattern from an array
+function containsPattern(text: string, patterns: readonly string[]): boolean {
   const trimmedText = text.trim();
-  return STATUS_MESSAGE_PATTERNS.some(pattern => trimmedText.includes(pattern));
-}
-
-// Helper function to check if text contains compilation error patterns
-function containsCompilationErrorPattern(context: string): boolean {
-  return COMPILATION_ERROR_PATTERNS.some(pattern => context.includes(pattern));
-}
-
-// Helper function to check if text contains syntax error patterns
-function containsSyntaxErrorPattern(context: string): boolean {
-  return SYNTAX_ERROR_PATTERNS.some(pattern => context.includes(pattern));
+  return patterns.some(pattern => trimmedText.includes(pattern));
 }
 
 // Parse console output into structured errors when possible
@@ -106,7 +96,7 @@ const structuredErrors = computed(() => {
 
 // Check if a line is a status/informational message
 function isStatusMessage(text: string): boolean {
-  return containsStatusPattern(text);
+  return containsPattern(text, STATUS_MESSAGE_PATTERNS);
 }
 
 // Extract status/informational messages to always show above the line
@@ -117,7 +107,7 @@ const statusOutput = computed(() => {
   const lines = props.consoleOutput.split('\n');
   const statusLines = lines.filter(line => {
     const trimmedLine = line.trim();
-    return trimmedLine && containsStatusPattern(line);
+    return trimmedLine && containsPattern(line, STATUS_MESSAGE_PATTERNS);
   });
 
   return statusLines.join('\n');
@@ -154,11 +144,11 @@ const tokens = computed(() => {
     const context = props.consoleOutput.slice(contextStart, contextEnd);
 
     // Compilation errors from WebGPU typically contain these patterns
-    const isCompilationError = containsCompilationErrorPattern(context) ||
+    const isCompilationError = containsPattern(context, COMPILATION_ERROR_PATTERNS) ||
                               (originalLine > headerOffset); // If line number is beyond header, likely compilation error
 
     // Syntax errors from Monaco typically appear as "Syntax error at line X" with lower line numbers
-    const isSyntaxError = containsSyntaxErrorPattern(context) ||
+    const isSyntaxError = containsPattern(context, SYNTAX_ERROR_PATTERNS) ||
                          (originalLine <= headerOffset && !isCompilationError);
 
     // Adjust line number for compilation errors only

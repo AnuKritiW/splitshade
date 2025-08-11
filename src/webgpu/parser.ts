@@ -23,14 +23,9 @@ const COMPILATION_ERROR_PATTERNS = [
   'Invalid'
 ] as const;
 
-// Helper function to check if text contains error patterns
-function containsErrorPattern(text: string): boolean {
-  return ERROR_DETECTION_PATTERNS.some(pattern => text.includes(pattern));
-}
-
-// Helper function to check if text contains compilation error patterns
-function containsCompilationError(text: string): boolean {
-  return COMPILATION_ERROR_PATTERNS.some(pattern => text.includes(pattern));
+// Generic helper function to check if text contains any pattern from an array
+function containsPattern(text: string, patterns: readonly string[]): boolean {
+  return patterns.some(pattern => text.includes(pattern));
 }
 
 // Get the number of lines in the injected header for line offset calculations
@@ -89,7 +84,7 @@ export function parseWebGPUErrors(errorMessage: string, headerLineOffset: number
   if (!errorMessage) return errors;
 
   // Check if the message contains actual errors, even if it also has success messages
-  const hasErrors = containsErrorPattern(errorMessage);
+  const hasErrors = containsPattern(errorMessage, ERROR_DETECTION_PATTERNS);
 
   if (!hasErrors) {
     // Skip success messages and informational messages - don't treat them as errors
@@ -198,7 +193,7 @@ export function parseWebGPUErrors(errorMessage: string, headerLineOffset: number
 
         // Only apply header offset for WebGPU compilation errors
         // Parser errors (syntax errors) are already relative to user code
-        const isCompilationError = containsCompilationError(match[0]);
+        const isCompilationError = containsPattern(match[0], COMPILATION_ERROR_PATTERNS);
 
         if (isCompilationError) {
           adjustedLine = Math.max(1, line - headerLineOffset);
