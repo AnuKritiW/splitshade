@@ -47,10 +47,12 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { getHeaderLineOffset, parseWebGPUErrors } from '../webgpu/parser';
+import { usesAnyTextures } from '../webgpu/textures';
 
 const props = defineProps<{
-  consoleOutput: string
-}>()
+  consoleOutput: string;
+  shaderCode?: string; // Add optional shader code prop
+}>();
 
 const emit = defineEmits<{
   (e: 'go-to-line', line: number, column?: number): void
@@ -61,8 +63,8 @@ const structuredErrors = computed(() => {
   if (!props.consoleOutput) return [];
 
   // Always try to parse errors, even if there are success messages mixed in
-  // We'll filter out purely success messages later
-  const headerOffset = getHeaderLineOffset();
+  // filter out purely success messages later
+  const headerOffset = getHeaderLineOffset(usesAnyTextures(props.shaderCode));
   const errors = parseWebGPUErrors(props.consoleOutput, headerOffset);
 
   // Return structured errors if we found any meaningful ones
@@ -86,7 +88,7 @@ const tokens = computed(() => {
   if (!props.consoleOutput) return out;
 
   // Get the header offset for adjusting compilation error line numbers
-  const headerOffset = getHeaderLineOffset();
+  const headerOffset = getHeaderLineOffset(usesAnyTextures(props.shaderCode));
 
   // Simple approach: just parse the console output for line number links
   // Don't try to enhance error messages here

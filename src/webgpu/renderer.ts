@@ -1,7 +1,7 @@
 import { parseWGSL } from './parser';
-import { loadDefaultTexture } from './textures';
+import { loadDefaultTexture, usesAnyTextures } from './textures';
 import { getWebGPUDevice, configureCanvasContext } from './context';
-import { fullscreenVertexWGSL, injectedHeader, compileShaderModule } from './shaders';
+import { fullscreenVertexWGSL, injectedHeader, minimalHeader, compileShaderModule } from './shaders';
 import { createUniforms } from './uniforms';
 import { createPipeline } from './pipeline';
 
@@ -120,7 +120,10 @@ export async function initWebGPU(
     output(`Detected shader type: ${parsedCode.type}`);
     parsedCode.warnings?.forEach(output);
 
-    let fullShaderCode = injectedHeader + '\n' + shaderCode;
+    // Check if shader uses any textures for optimization
+    const needsTextures = usesAnyTextures(shaderCode);
+    // output(needsTextures ? 'Textures detected: allocating all 4 channels' : 'No textures detected: optimized allocation');
+    let fullShaderCode = (needsTextures ? injectedHeader : minimalHeader) + '\n' + shaderCode;
 
     let vertexEntry = "main";
     const fragmentEntry = parsedCode.entryPoints.fragment[0].name;
@@ -147,12 +150,16 @@ export async function initWebGPU(
 
     if (!selectedTextures.iChannel0) return output("No texture provided for iChannel0");
 
-    const textureBindings = await Promise.all(
-      [selectedTextures.iChannel0, selectedTextures.iChannel1, selectedTextures.iChannel2, selectedTextures.iChannel3].map(async (src) => {
-        if (!src) return null;
-        return await loadDefaultTexture(device, src);
-      })
-    );
+    let textureBindings: ({ textureView: GPUTextureView; sampler: GPUSampler; } | null)[] = [];
+
+    if (needsTextures) {
+      textureBindings = await Promise.all(
+        [selectedTextures.iChannel0, selectedTextures.iChannel1, selectedTextures.iChannel2, selectedTextures.iChannel3].map(async (src) => {
+          if (!src) return null;
+          return await loadDefaultTexture(device, src);
+        })
+      );
+    }
 
     // Create iResolution uniform (vec3<f32>: width, height, 1.0)
     // Create iTime uniform (f32: 0.0)

@@ -31,6 +31,12 @@ export const DEFAULT_TEXTURES = [
   { name: 'wood', path: '/splitshade/textures/wood.jpg' },
 ]
 
+// check if shader uses any texture channels at all
+export function usesAnyTextures(shaderCode: string | undefined | null): boolean {
+  if (!shaderCode || shaderCode.trim() === '') return false;
+  return /\biChannel[0-3]\b/.test(shaderCode);
+}
+
 export async function loadDefaultTexture(device: GPUDevice, src: string): Promise<{
   textureView: GPUTextureView;
   sampler: GPUSampler;

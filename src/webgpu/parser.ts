@@ -7,13 +7,16 @@ export interface ParsedError {
 }
 
 // Get the number of lines in the injected header for line offset calculations
-export function getHeaderLineOffset(): number {
-  // Empirically determined: WebGPU error line numbers need to be adjusted by 13
-  // This accounts for:
-  // 1. injectedHeader template literal structure (leading newline + 11 declarations + trailing newline = 13 lines)
-  // 2. Additional '\n' added in renderer.ts when concatenating header + user code
-  // 3. Possible other whitespace/formatting differences in the compilation process
-  return 13;
+export function getHeaderLineOffset(usesTextures: boolean = true): number {
+  if (usesTextures) {
+    // Empirically determined: WebGPU error line numbers need to be adjusted by 13
+    // This accounts for injectedHeader template literal structure (leading newline + 11 declarations + trailing newline = 13 lines)
+    return 13;
+  } else {
+    // Minimal header without textures: empirically determined to be 5 lines
+    // This accounts for minimalHeader template literal structure (leading newline + 3 declarations + trailing newline = 5 lines)
+    return 5;
+  }
 }
 
 export function parseWGSL(wgslCode: string) {

@@ -24,6 +24,13 @@ export const injectedHeader = `
 @group(0) @binding(10) var iChannel3Sampler: sampler;
 `;
 
+// TODO: use this abstracted value in injectedHeader
+export const minimalHeader = `
+@group(0) @binding(0) var<uniform> iResolution: vec3<f32>;
+@group(0) @binding(1) var<uniform> iTime: f32;
+@group(0) @binding(2) var<uniform> iMouse: vec4<f32>;
+`;
+
 export async function compileShaderModule(device: GPUDevice, code: string, output: (msg: string) => void) {
   const module = device.createShaderModule({ code });
 
