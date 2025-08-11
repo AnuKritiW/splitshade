@@ -4,8 +4,8 @@
     <n-scrollbar style="max-height: 100%;">
       <div class="console-content">
       <!-- Always show raw console output first for context -->
-      <div v-if="nonErrorOutput" class="console-pre non-error-output">
-        {{ nonErrorOutput }}
+      <div v-if="statusOutput" class="console-pre non-error-output">
+        {{ statusOutput }}
       </div>
 
       <!-- Structured error display -->
@@ -30,20 +30,11 @@
       </div>
 
       <!-- Enhanced console output for compilation errors and fallback -->
+            <!-- If no structured errors, show raw console output (minus status messages) -->
       <div v-else class="console-pre">
-        <template v-for="(t, i) in tokens" :key="i">
-          <!-- Line link -->
-          <button
-            v-if="t.kind === 'line'"
-            class="line-link"
-            type="button"
-            @click="emit('go-to-line', t.num, undefined)"
-            :title="`Jump to line ${t.num}`"
-          >
-            L{{ t.num }}
-          </button>
-          <!-- Compilation error styling for error messages -->
-          <span v-else :class="{ 'compilation-error': isCompilationError(t.text) }">{{ t.text }}</span>
+        <template v-for="(token, index) in tokens" :key="index">
+          <span v-if="token.kind === 'text' && !isStatusMessage(token.text)">{{ token.text }}</span>
+          <span v-else-if="token.kind === 'line'" class="line-number">{{ token.num }}</span>
         </template>
       </div>
     </div>
@@ -78,37 +69,34 @@ const structuredErrors = computed(() => {
   return errors.filter(e => e.message && e.message.length > 0);
 });
 
-// Extract non-error output (informational messages) to show alongside structured errors
-const nonErrorOutput = computed(() => {
-  if (!props.consoleOutput || structuredErrors.value.length === 0) return '';
+// Check if a line is a status/informational message
+function isStatusMessage(text: string): boolean {
+  const trimmedText = text.trim();
+  return trimmedText.includes('Detected shader type') ||
+         trimmedText.includes('Shader compiled') ||
+         trimmedText.includes('Successfully') ||
+         trimmedText.includes('Initializing');
+}
 
-  // Extract lines that are informational (not error content)
+// Extract status/informational messages to always show above the line
+const statusOutput = computed(() => {
+  if (!props.consoleOutput) return '';
+
+  // Extract lines that are status/informational
   const lines = props.consoleOutput.split('\n');
-  const infoLines = lines.filter(line => {
+  const statusLines = lines.filter(line => {
     const trimmedLine = line.trim();
     return trimmedLine &&
-           !trimmedLine.includes('WebGPU Error') &&
-           !trimmedLine.includes('While validating') &&
-           !trimmedLine.includes('While calling') &&
            (trimmedLine.includes('Detected shader type') ||
             trimmedLine.includes('Shader compiled') ||
             trimmedLine.includes('Successfully') ||
             trimmedLine.includes('Initializing'));
   });
 
-  return infoLines.join('\n');
+  return statusLines.join('\n');
 });
 
 // Helper to identify compilation errors in console text
-function isCompilationError(text: string): boolean {
-  return text.includes('compilation failed') ||
-         text.includes('Shader compilation error') ||
-         text.includes('error:') ||
-         text.includes('WebGPU Error') ||
-         text.includes('Invalid') ||
-         /line \d+/.test(text);
-}
-
 // Parse console output for line references - keep it simple
 const tokens = computed(() => {
   const out: Array<{ kind: 'text'; text: string } | { kind: 'line'; num: number }> = [];
