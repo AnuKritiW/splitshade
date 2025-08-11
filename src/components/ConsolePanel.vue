@@ -1,7 +1,8 @@
 <template>
   <!-- Console (bottom-right) -->
-  <n-card title="Console" size="small" class="panel panel-console" style="grid-row: 2; grid-column: 2;">
-    <div class="console-content">
+  <n-card title="Console" size="small" class="panel-console" style="grid-row: 2; grid-column: 2;">
+    <n-scrollbar style="max-height: 100%;">
+      <div class="console-content">
       <!-- Structured error display -->
       <div v-if="structuredErrors.length > 0" class="structured-errors">
         <div v-for="(error, index) in structuredErrors" :key="index"
@@ -41,6 +42,7 @@
         </template>
       </div>
     </div>
+    </n-scrollbar>
   </n-card>
 </template>
 
@@ -141,33 +143,47 @@ const tokens = computed(() => {
 </script>
 
 <style scoped>
+/* Force console card to be a flex container with proper height */
 .panel-console {
-  display: flex;
-  flex-direction: column;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
   min-height: 0;
+  min-width: 0;
 }
 
-.panel-console .n-card__content {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
+/* Override Naive UI card styles */
+.panel-console :deep(.n-card) {
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
-.panel-console .console-content {
-  flex: 1;
-  overflow-y: auto;     /* scroll when it overflows */
+.panel-console :deep(.n-card__content) {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  padding: 12px !important;
+}
+
+/* Console content with proper scrolling */
+.console-content {
+  flex: 1 !important;
   padding-bottom: 16px;
+  max-width: 100%;      /* ensure content doesn't exceed panel width */
 }
-
 .console-pre {
   margin: 0;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
                "Liberation Mono", "Courier New", monospace;
   white-space: pre-wrap;        /* keep newlines/indentation, allow wrapping */
   word-break: break-word;       /* avoid horizontal scroll on long tokens */
+  overflow-wrap: break-word;    /* additional word breaking for long strings */
   font-variant-ligatures: none; /* no confusing 'fi'/'fl' ligatures etc. */
   tab-size: 2;
+  max-width: 100%;              /* ensure it doesn't exceed container width */
 }
 
 .line-link {
@@ -225,6 +241,9 @@ const tokens = computed(() => {
   font-size: 12px;
   color: #ccc;
   line-height: 1.4;
+  word-break: break-word;       /* break long words */
+  overflow-wrap: break-word;    /* additional word breaking */
+  max-width: 100%;              /* ensure it doesn't exceed container width */
 }
 
 /* Compilation error styling for raw console output */
@@ -236,5 +255,8 @@ const tokens = computed(() => {
   border-radius: 4px;
   display: block;
   line-height: 1.4;
+  word-break: break-word;       /* break long words */
+  overflow-wrap: break-word;    /* additional word breaking */
+  max-width: 100%;              /* ensure it doesn't exceed container width */
 }
 </style>
