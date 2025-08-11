@@ -149,6 +149,7 @@ function handleGoToLine(line: number, column?: number) {
         <!-- Console (bottom-right) -->
         <ConsolePanel
           :console-output="consoleOutput"
+          :shader-code="code"
           @go-to-line="handleGoToLine"
           style="grid-row: 2; grid-column: 2;"
         />
