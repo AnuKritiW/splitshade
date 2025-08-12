@@ -49,6 +49,17 @@ const consoleOutput = ref("")
 
 const { runShader } = useShaderRunner()
 
+function openDocs() {
+  window.open('https://anukritiw.github.io/splitshade-docs/', '_blank')
+}
+
+function handleTitleHover(event: MouseEvent, opacity: string) {
+  const target = event.target as HTMLElement
+  if (target) {
+    target.style.opacity = opacity
+  }
+}
+
 function handleRunShader() {
   if (!previewRef.value?.canvasRef) return
   consoleOutput.value = ''
@@ -82,15 +93,20 @@ function handleGoToLine(line: number, column?: number) {
     <div class="root-grid">
       <n-layout-header bordered style="padding: 12px;">
         <div class="header-content">
-          <h2 style="margin: 0; color: white;">SplitShade: WebGPU Playground</h2>
+          <h2
+            style="margin: 0; color: white; cursor: pointer; user-select: none; transition: opacity 0.2s ease;"
+            @click="openDocs"
+            @mouseenter="handleTitleHover($event, '0.8')"
+            @mouseleave="handleTitleHover($event, '1')"
+            title="Click to open documentation"
+          >
+            SplitShade: WebGPU Playground
+          </h2>
           <div class="header-links">
             <n-button
               class="docs-button"
               text
-              tag="a"
-              href="https://anukritiw.github.io/splitshade-docs"
-              target="_blank"
-              rel="noopener"
+              @click="openDocs"
               title="Read the docs"
             >
               <span>Docs ↗</span>
