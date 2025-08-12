@@ -3,6 +3,11 @@
   <n-card title="Console" size="small" class="panel-console" style="grid-row: 2; grid-column: 2;">
     <n-scrollbar style="max-height: 100%;">
       <div class="console-content">
+      <!-- Always show raw console output first for context -->
+      <div v-if="statusOutput" class="console-pre non-error-output">
+        {{ statusOutput }}
+      </div>
+
       <!-- Structured error display -->
       <div v-if="structuredErrors.length > 0" class="structured-errors">
         <div v-for="(error, index) in structuredErrors" :key="index"
@@ -25,20 +30,11 @@
       </div>
 
       <!-- Enhanced console output for compilation errors and fallback -->
+            <!-- If no structured errors, show raw console output (minus status messages) -->
       <div v-else class="console-pre">
-        <template v-for="(t, i) in tokens" :key="i">
-          <!-- Line link -->
-          <button
-            v-if="t.kind === 'line'"
-            class="line-link"
-            type="button"
-            @click="emit('go-to-line', t.num, undefined)"
-            :title="`Jump to line ${t.num}`"
-          >
-            L{{ t.num }}
-          </button>
-          <!-- Compilation error styling for error messages -->
-          <span v-else :class="{ 'compilation-error': isCompilationError(t.text) }">{{ t.text }}</span>
+        <template v-for="(token, index) in tokens" :key="index">
+          <span v-if="token.kind === 'text' && !isStatusMessage(token.text)">{{ token.text }}</span>
+          <span v-else-if="token.kind === 'line'" class="line-number">{{ token.num }}</span>
         </template>
       </div>
     </div>
@@ -60,6 +56,31 @@ const emit = defineEmits<{
   (e: 'go-to-line', line: number, column?: number): void
 }>()
 
+const STATUS_MESSAGE_PATTERNS = [
+  'Detected shader type',
+  'Shader compiled',
+  'Successfully',
+  'Initializing'
+] as const;
+
+const COMPILATION_ERROR_PATTERNS = [
+  'compilation',
+  'shader failed',
+  'Invalid',
+  'error:'
+] as const;
+
+const SYNTAX_ERROR_PATTERNS = [
+  'Syntax error',
+  'Expected'
+] as const;
+
+// Generic helper function to check if text contains any pattern from an array
+function containsPattern(text: string, patterns: readonly string[]): boolean {
+  const trimmedText = text.trim();
+  return patterns.some(pattern => trimmedText.includes(pattern));
+}
+
 // Parse console output into structured errors when possible
 const structuredErrors = computed(() => {
   if (!props.consoleOutput) return [];
@@ -73,16 +94,26 @@ const structuredErrors = computed(() => {
   return errors.filter(e => e.message && e.message.length > 0);
 });
 
-// Helper to identify compilation errors in console text
-function isCompilationError(text: string): boolean {
-  return text.includes('compilation failed') ||
-         text.includes('Shader compilation error') ||
-         text.includes('error:') ||
-         text.includes('WebGPU Error') ||
-         text.includes('Invalid') ||
-         /line \d+/.test(text);
+// Check if a line is a status/informational message
+function isStatusMessage(text: string): boolean {
+  return containsPattern(text, STATUS_MESSAGE_PATTERNS);
 }
 
+// Extract status/informational messages to always show above the line
+const statusOutput = computed(() => {
+  if (!props.consoleOutput) return '';
+
+  // Extract lines that are status/informational
+  const lines = props.consoleOutput.split('\n');
+  const statusLines = lines.filter(line => {
+    const trimmedLine = line.trim();
+    return trimmedLine && containsPattern(line, STATUS_MESSAGE_PATTERNS);
+  });
+
+  return statusLines.join('\n');
+});
+
+// Helper to identify compilation errors in console text
 // Parse console output for line references - keep it simple
 const tokens = computed(() => {
   const out: Array<{ kind: 'text'; text: string } | { kind: 'line'; num: number }> = [];
@@ -113,15 +144,11 @@ const tokens = computed(() => {
     const context = props.consoleOutput.slice(contextStart, contextEnd);
 
     // Compilation errors from WebGPU typically contain these patterns
-    const isCompilationError = context.includes('compilation') ||
-                              context.includes('shader failed') ||
-                              context.includes('Invalid') ||
-                              context.includes('error:') ||
+    const isCompilationError = containsPattern(context, COMPILATION_ERROR_PATTERNS) ||
                               (originalLine > headerOffset); // If line number is beyond header, likely compilation error
 
     // Syntax errors from Monaco typically appear as "Syntax error at line X" with lower line numbers
-    const isSyntaxError = context.includes('Syntax error') ||
-                         context.includes('Expected') ||
+    const isSyntaxError = containsPattern(context, SYNTAX_ERROR_PATTERNS) ||
                          (originalLine <= headerOffset && !isCompilationError);
 
     // Adjust line number for compilation errors only
@@ -173,6 +200,15 @@ const tokens = computed(() => {
   flex: 1 !important;
   padding-bottom: 16px;
   max-width: 100%;      /* ensure content doesn't exceed panel width */
+}
+
+/* Non-error output styling */
+.non-error-output {
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #888;
+  font-size: 0.9em;
 }
 .console-pre {
   margin: 0;
