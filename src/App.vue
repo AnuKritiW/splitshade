@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import { darkTheme } from 'naive-ui'
-import { ref } from 'vue'
-const code = ref(`// Write your WGSL code here`)
+import { ref, onMounted, nextTick } from 'vue'
+const code = ref(`@fragment
+fn main(@builtin(position) coord: vec4<f32>) -> @location(0) vec4<f32> {
+    let uv = coord.xy / iResolution.xy;
+    let color = vec3<f32>(uv.x, uv.y, 0.5);
+    return vec4<f32>(color, 1.0);
+}`)
 
 import { loader } from '@guolao/vue-monaco-editor'
 import { LogoGithub } from '@vicons/ionicons5'
@@ -85,6 +90,14 @@ function handleGoToLine(line: number, column?: number) {
     editorRef.value.goToLine(line, column)
   }
 }
+
+// auto-run the initial shader when the app mounts
+onMounted(() => {
+  // Wait for the next DOM update cycle to ensure all child components are rendered
+  nextTick(() => {
+    handleRunShader()
+  })
+})
 </script>
 
 <template>
@@ -158,8 +171,8 @@ function handleGoToLine(line: number, column?: number) {
           @selectPresetMesh="selectPresetMesh"
           @downloadMesh="downloadMesh"
           @handleMeshUpload="handleMeshUpload"
-          @update:showTextureModal="val => showTextureModal = val"
-          @update:showMeshModal="val => showMeshModal = val"
+          @update:showTextureModal="(val: boolean) => showTextureModal = val"
+          @update:showMeshModal="(val: boolean) => showMeshModal = val"
         />
 
         <!-- Console (bottom-right) -->
