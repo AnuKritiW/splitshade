@@ -45,13 +45,13 @@ describe('shaders module', () => {
         })),
       } as unknown as GPUDevice
 
-      const module = await compileShaderModule(deviceWithWarning, 'some shader')
+      const result = await compileShaderModule(deviceWithWarning, 'some shader')
 
-      expect(module).not.toBeNull()
-      expect(module.errors.length).toBe(1)
-      expect(module.errors[0].type).toBe('warning')
-      expect(module.errors[0].message).toBe('This is a warning')
-      expect(module.hasErrors).toBe(false)
+      expect(result.module).not.toBeNull()
+      expect(result.errors.length).toBe(1)
+      expect(result.errors[0].type).toBe('warning')
+      expect(result.errors[0].message).toBe('This is a warning')
+      expect(result.hasErrors).toBe(false)
     })
 
     it('returns null if any message is an error', async () => {
@@ -62,13 +62,13 @@ describe('shaders module', () => {
         })),
       } as unknown as GPUDevice
 
-      const module = await compileShaderModule(deviceWithError, 'broken shader')
+      const result = await compileShaderModule(deviceWithError, 'broken shader')
 
-      expect(module).toBeNull()
-      expect(module.errors.length).toBe(1)
-      expect(module.errors[0].type).toBe('error')
-      expect(module.errors[0].message).toBe('Syntax error')
-      expect(module.hasErrors).toBe(true)
+      expect(result.module).toBeNull()
+      expect(result.errors.length).toBe(1)
+      expect(result.errors[0].type).toBe('error')
+      expect(result.errors[0].message).toBe('Syntax error')
+      expect(result.hasErrors).toBe(true)
     })
   })
 })
