@@ -47,6 +47,7 @@ describe('useShaderRunner', () => {
         iChannel3: '/img/tex3.png',
       },
       mockOnLog,
+      undefined, // no structured error callback is provided
       mockMesh
     )
   })

@@ -45,11 +45,13 @@ describe('shaders module', () => {
         })),
       } as unknown as GPUDevice
 
-      const outputFn = vi.fn()
-      const module = await compileShaderModule(deviceWithWarning, 'some shader', outputFn)
+      const module = await compileShaderModule(deviceWithWarning, 'some shader')
 
       expect(module).not.toBeNull()
-      expect(outputFn).toHaveBeenCalledWith(expect.stringContaining('[warning] L1:1 This is a warning'))
+      expect(module.errors.length).toBe(1)
+      expect(module.errors[0].type).toBe('warning')
+      expect(module.errors[0].message).toBe('This is a warning')
+      expect(module.hasErrors).toBe(false)
     })
 
     it('returns null if any message is an error', async () => {
@@ -60,11 +62,13 @@ describe('shaders module', () => {
         })),
       } as unknown as GPUDevice
 
-      const outputFn = vi.fn()
-      const result = await compileShaderModule(deviceWithError, 'broken shader', outputFn)
+      const module = await compileShaderModule(deviceWithError, 'broken shader')
 
-      expect(result).toBeNull()
-      expect(outputFn).toHaveBeenCalledWith(expect.stringContaining('[error] L2:4 Syntax error'))
+      expect(module).toBeNull()
+      expect(module.errors.length).toBe(1)
+      expect(module.errors[0].type).toBe('error')
+      expect(module.errors[0].message).toBe('Syntax error')
+      expect(module.hasErrors).toBe(true)
     })
   })
 })
