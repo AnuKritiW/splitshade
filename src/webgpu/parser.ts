@@ -163,9 +163,22 @@ export function parseWebGPUErrors(errorMessage: string, headerLineOffset: number
         message = match[1].trim();
         line = parseInt(match[2], 10);
       } else if (match[0].includes('at line') && !match[0].includes('[error]')) {
-        // Pattern: "Expected ';' after statement at line 6" (but not compilation errors)
-        message = match[1].trim();
-        line = parseInt(match[2], 10);
+        // Supports both:
+        // 1) "at line N, column M: message"  (line-first, colon format)
+        // 2) "message at line N"             (message-first format)
+
+        if (match[3] && /:\s*/.test(match[0])) {
+          // Shape 1: "at line N, column M: message"
+          line = parseInt(match[1], 10);
+          if (match[2] && /^\d+$/.test(match[2])) {
+            column = parseInt(match[2], 10);
+          }
+          message = match[3].trim();
+        } else {
+          // Shape 2: "message at line N"
+          message = (match[1] || '').trim();
+          line = parseInt(match[2], 10);
+        }
       } else if (match[0].includes('error:') && match[0].includes('at line')) {
         // Pattern: "error: undeclared identifier 'variable' at line 4"
         message = match[1].trim();
