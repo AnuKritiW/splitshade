@@ -3,12 +3,12 @@
   <n-card title="Console" size="small" class="panel-console" style="grid-row: 2; grid-column: 2;">
     <n-scrollbar style="max-height: 100%;">
       <div class="console-content">
-      <!-- Always show raw console output first for context -->
-      <div v-if="statusOutput" class="console-pre non-error-output">
-        {{ statusOutput }}
+      <!-- Manual output() messages (above the line) -->
+      <div v-if="consoleOutput" class="console-pre non-error-output">
+        {{ consoleOutput }}
       </div>
 
-      <!-- Structured error display -->
+      <!-- System-generated errors from WebGPU (below the line) -->
       <div v-if="structuredErrors.length > 0" class="structured-errors">
         <div v-for="(error, index) in structuredErrors" :key="index"
              class="error-item"
@@ -36,15 +36,6 @@
           <div class="error-message">{{ error.message }}</div>
         </div>
       </div>
-
-      <!-- Enhanced console output for compilation errors and fallback -->
-            <!-- If no structured errors, show raw console output (minus status messages) -->
-      <div v-else class="console-pre">
-        <template v-for="(token, index) in tokens" :key="index">
-          <span v-if="token.kind === 'text' && !isStatusMessage(token.text)">{{ token.text }}</span>
-          <span v-else-if="token.kind === 'line'" class="line-number">{{ token.num }}</span>
-        </template>
-      </div>
     </div>
     </n-scrollbar>
   </n-card>
@@ -52,12 +43,10 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { parseWebGPUErrors, getHeaderLineOffset } from '../webgpu/parser';
-import { usesAnyTextures } from '../webgpu/textures';
 
 const props = defineProps<{
   consoleOutput: string;
-  shaderCode?: string; // Add optional shader code prop
+  shaderCode?: string;
   structuredErrors?: Array<{
     message: string;
     line: number;
@@ -65,132 +54,16 @@ const props = defineProps<{
     type: string;
     offset: number;
     length: number;
-  }>; // Direct structured errors from GPUCompilationInfo
+  }>;
 }>();
 
 const emit = defineEmits<{
   (e: 'go-to-line', line: number, column?: number): void
 }>()
 
-const STATUS_MESSAGE_PATTERNS = [
-  'Detected shader type',
-  'Shader compiled',
-  'Successfully',
-  'Initializing'
-] as const;
-
-const COMPILATION_ERROR_PATTERNS = [
-  'compilation',
-  'shader failed',
-  'Invalid',
-  'error:'
-] as const;
-
-const SYNTAX_ERROR_PATTERNS = [
-  'Syntax error',
-  'Expected'
-] as const;
-
-// Generic helper function to check if text contains any pattern from an array
-function containsPattern(text: string, patterns: readonly string[]): boolean {
-  const trimmedText = text.trim();
-  return patterns.some(pattern => trimmedText.includes(pattern));
-}
-
-// Parse console output into structured errors when possible
+// Use structured errors from WebGPU's GPUCompilationInfo
 const structuredErrors = computed(() => {
-  // Prioritize structured errors from GPUCompilationInfo if available
-  if (props.structuredErrors && props.structuredErrors.length > 0) {
-    console.log('Using structured errors from GPUCompilationInfo:', props.structuredErrors);
-    // structured errors line number already adjusted in shaders.ts
-
-    return props.structuredErrors;
-  }
-
-  // Fallback to pattern matching for cases where structured errors aren't available
-  if (!props.consoleOutput) return [];
-
-  console.log('Falling back to pattern-based error parsing');
-  // Don't pass headerOffset because parseWebGPUErrors already adjusts line numbers internally
-  // when parsing from console output (which already includes the header)
-  const errors = parseWebGPUErrors(props.consoleOutput, 0);
-
-  // Return structured errors if we found any meaningful ones
-  return errors.filter(e => e.message && e.message.length > 0);
-});
-
-// Check if a line is a status/informational message
-function isStatusMessage(text: string): boolean {
-  return containsPattern(text, STATUS_MESSAGE_PATTERNS);
-}
-
-// Extract status/informational messages to always show above the line
-const statusOutput = computed(() => {
-  if (!props.consoleOutput) return '';
-
-  // Extract lines that are status/informational
-  const lines = props.consoleOutput.split('\n');
-  const statusLines = lines.filter(line => {
-    const trimmedLine = line.trim();
-    return trimmedLine && containsPattern(line, STATUS_MESSAGE_PATTERNS);
-  });
-
-  return statusLines.join('\n');
-});
-
-// Helper to identify compilation errors in console text
-// Parse console output for line references - keep it simple
-const tokens = computed(() => {
-  const out: Array<{ kind: 'text'; text: string } | { kind: 'line'; num: number }> = [];
-
-  if (!props.consoleOutput) return out;
-
-  // Get the header offset for adjusting compilation error line numbers
-  const headerOffset = getHeaderLineOffset(usesAnyTextures(props.shaderCode));
-
-  // Simple approach: just parse the console output for line number links
-  // Don't try to enhance error messages here
-  const re = /\b(?:Line\s*[:#]?\s*(\d+)|L(\d+))\b/gi;
-  let lastIndex = 0;
-  let m: RegExpExecArray | null;
-
-  while ((m = re.exec(props.consoleOutput)) !== null) {
-    if (m.index > lastIndex) {
-      out.push({ kind: 'text', text: props.consoleOutput.slice(lastIndex, m.index) });
-    }
-
-    const originalLine = Number(m[1] ?? m[2]);
-
-    // TODO: revisit
-    // Determine if this is a compilation error that needs line adjustment
-    // Look for WebGPU compilation error patterns vs Monaco syntax errors
-    const contextStart = Math.max(0, m.index - 100);
-    const contextEnd = Math.min(props.consoleOutput.length, m.index + 100);
-    const context = props.consoleOutput.slice(contextStart, contextEnd);
-
-    // Compilation errors from WebGPU typically contain these patterns
-    const isCompilationError = containsPattern(context, COMPILATION_ERROR_PATTERNS) ||
-                              (originalLine > headerOffset); // If line number is beyond header, likely compilation error
-
-    // Syntax errors from Monaco typically appear as "Syntax error at line X" with lower line numbers
-    const isSyntaxError = containsPattern(context, SYNTAX_ERROR_PATTERNS) ||
-                         (originalLine <= headerOffset && !isCompilationError);
-
-    // Adjust line number for compilation errors only
-    let adjustedLine = originalLine;
-    if (isCompilationError && !isSyntaxError) {
-      adjustedLine = Math.max(1, originalLine - headerOffset);
-    }
-
-    out.push({ kind: 'line', num: adjustedLine });
-    lastIndex = re.lastIndex;
-  }
-
-  if (lastIndex < props.consoleOutput.length) {
-    out.push({ kind: 'text', text: props.consoleOutput.slice(lastIndex) });
-  }
-
-  return out;
+  return props.structuredErrors || [];
 });
 </script>
 

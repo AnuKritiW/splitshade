@@ -42,7 +42,7 @@ export interface CompilationResult {
   hasErrors: boolean;
 }
 
-export async function compileShaderModule(device: GPUDevice, code: string, output: (msg: string) => void): Promise<CompilationResult> {
+export async function compileShaderModule(device: GPUDevice, code: string): Promise<CompilationResult> {
   const module = device.createShaderModule({ code });
 
   // Get diagnostic info
@@ -75,13 +75,7 @@ export async function compileShaderModule(device: GPUDevice, code: string, outpu
     });
     console.log('=== End Messages ===');
 
-    // For backward compatibility, still send formatted text to console output
-    const formatted = info.messages.map(m => {
-      const where = `L${m.lineNum}:${m.linePos}`;
-      return `[${m.type}] ${where} ${m.message}`;
-    }).join("\n");
-
-    output(formatted);
+    // Structured errors will handle display - no need for manual output
   }  return {
     module: hasErrors ? null : module,
     errors: structuredErrors,
