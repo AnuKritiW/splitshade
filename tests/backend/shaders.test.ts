@@ -22,8 +22,6 @@ describe('shaders module', () => {
   })
 
   describe('compileShaderModule', () => {
-    const mockOutput = vi.fn()
-
     const mockDevice = {
       createShaderModule: vi.fn(({ code }) => ({
         code,
@@ -32,9 +30,10 @@ describe('shaders module', () => {
     } as unknown as GPUDevice
 
     it('returns module if no messages', async () => {
-      const module = await compileShaderModule(mockDevice, 'fake shader code', mockOutput)
-      expect(module).not.toBeNull()
-      expect(mockOutput).not.toHaveBeenCalled()
+      const result = await compileShaderModule(mockDevice, 'fake shader code')
+      expect(result.module).not.toBeNull()
+      expect(result.errors.length).toBe(0)
+      expect(result.hasErrors).toBe(false)
     })
 
     it('returns module if only warnings', async () => {
