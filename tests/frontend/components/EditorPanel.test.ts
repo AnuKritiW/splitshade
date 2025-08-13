@@ -74,4 +74,32 @@ describe('EditorPanel.vue', () => {
     await button.trigger('click')         // simulate click
     expect(runShaderMock).toHaveBeenCalled()
   })
+
+  it('goToLine calls Monaco API methods', () => {
+    const runShaderMock = vi.fn()
+    const wrapper = mountEditorPanelWithFooterStub({
+      code: 'test',
+      runShader: runShaderMock,
+    })
+
+    // simulate <VueMonacoEditor @mount="onEditorMount">
+    const revealSpy = vi.fn()
+    const setPosSpy = vi.fn()
+    const focusSpy = vi.fn()
+    const fakeEditor = {
+      revealLineInCenter: revealSpy,
+      setPosition: setPosSpy,
+      focus: focusSpy,
+    }
+    wrapper.findComponent({ name: 'VueMonacoEditor' }).vm.$emit('mount', fakeEditor)
+
+    // Call onEditorMount directly to set the mocked instance
+    const exposed = wrapper.vm as unknown as { goToLine: (l: number, c?: number) => void }
+    exposed.goToLine(10, 5)
+
+    expect(revealSpy).toHaveBeenCalledWith(10)
+    expect(setPosSpy).toHaveBeenCalledWith({ lineNumber: 10, column: 5 })
+    expect(focusSpy).toHaveBeenCalled()
+  })
+
 })
