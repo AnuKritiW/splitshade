@@ -29,18 +29,62 @@ const textureBindings = `
 
 export const injectedHeader = minimalHeader + textureBindings;
 
-export async function compileShaderModule(device: GPUDevice, code: string, output: (msg: string) => void) {
+export interface CompilationResult {
+  module: GPUShaderModule | null;
+  errors: Array<{
+    message: string;
+    line: number;
+    column: number;
+    type: string;
+    offset: number;
+    length: number;
+  }>;
+  hasErrors: boolean;
+}
+
+export async function compileShaderModule(device: GPUDevice, code: string, output: (msg: string) => void): Promise<CompilationResult> {
   const module = device.createShaderModule({ code });
 
   // Get diagnostic info
   const info = await module.getCompilationInfo();
+
+  // Calculate header offset to adjust line numbers for user code
+  const headerLines = code.split('\n').findIndex(line => line.trim().startsWith('@fragment') || line.trim().startsWith('@vertex') || line.trim().startsWith('fn '));
+  const headerOffset = headerLines > 0 ? headerLines : 0;
+
+  const structuredErrors = info.messages.map(m => ({
+    message: m.message,
+    line: Math.max(1, m.lineNum - headerOffset), // Adjust line numbers to user code
+    column: m.linePos,
+    type: m.type,
+    offset: m.offset,
+    length: m.length
+  }));
+
+  const hasErrors = info.messages.some(m => m.type === "error");
+
   if (info.messages.length > 0) {
+    // Enhanced debug output - log each message type
+    console.log('=== WebGPU Compilation Messages ===');
+    info.messages.forEach((m, i) => {
+      console.log(`Message ${i + 1}:`);
+      console.log(`  Type: "${m.type}"`);
+      console.log(`  Line: ${m.lineNum}, Column: ${m.linePos}`);
+      console.log(`  Message: "${m.message}"`);
+      console.log('---');
+    });
+    console.log('=== End Messages ===');
+
+    // For backward compatibility, still send formatted text to console output
     const formatted = info.messages.map(m => {
       const where = `L${m.lineNum}:${m.linePos}`;
       return `[${m.type}] ${where} ${m.message}`;
     }).join("\n");
+
     output(formatted);
-    if (info.messages.some(m => m.type === "error")) return null;
-  }
-  return module;
+  }  return {
+    module: hasErrors ? null : module,
+    errors: structuredErrors,
+    hasErrors
+  };
 }

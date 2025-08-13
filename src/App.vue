@@ -51,6 +51,14 @@ loader.config({
 const previewRef = ref<InstanceType<typeof PreviewPanel> | null>(null)
 const editorRef = ref<InstanceType<typeof EditorPanel> | null>(null)
 const consoleOutput = ref("")
+const structuredErrors = ref<Array<{
+  message: string;
+  line: number;
+  column: number;
+  type: string;
+  offset: number;
+  length: number;
+}>>([])
 
 const { runShader } = useShaderRunner()
 
@@ -68,6 +76,7 @@ function handleTitleHover(event: MouseEvent, opacity: string) {
 function handleRunShader() {
   if (!previewRef.value?.canvasRef) return
   consoleOutput.value = ''
+  structuredErrors.value = []
 
   const validTextures = Object.fromEntries(
     Object.entries(selectedTextures.value).filter(([_, v]) => typeof v === 'string' && v !== null)
@@ -80,6 +89,9 @@ function handleRunShader() {
     mesh: uploadedMesh.vertexData,
     onLog: msg => {
       consoleOutput.value += (msg || 'Compiled successfully') + '\n'
+    },
+    onStructuredErrors: errors => {
+      structuredErrors.value = errors
     }
   })
 }
@@ -179,6 +191,7 @@ onMounted(() => {
         <ConsolePanel
           :console-output="consoleOutput"
           :shader-code="code"
+          :structured-errors="structuredErrors"
           @go-to-line="handleGoToLine"
           style="grid-row: 2; grid-column: 2;"
         />

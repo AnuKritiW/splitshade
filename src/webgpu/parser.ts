@@ -4,6 +4,7 @@ export interface ParsedError {
   message: string;
   line: number;
   column?: number;
+  type?: string; // Add optional type field for compatibility with GPUCompilationInfo
 }
 
 // Define error detection patterns for reuse
@@ -215,7 +216,8 @@ export function parseWebGPUErrors(errorMessage: string, headerLineOffset: number
         errors.push({
           line: adjustedLine,
           column,
-          message: cleanErrorMessage(message)
+          message: cleanErrorMessage(message),
+          type: 'error' // Set type as error for pattern-matched errors
         });
 
         // Break out of pattern loop once we've found and processed errors
@@ -243,7 +245,8 @@ export function parseWebGPUErrors(errorMessage: string, headerLineOffset: number
 
         errors.push({
           line: adjustedLine,
-          message: errorMessage.trim()
+          message: errorMessage.trim(),
+          type: 'error' // Set type as error for generic line-based errors
         });
         break; // Only add one generic error
       }
@@ -260,7 +263,8 @@ export function parseWebGPUErrors(errorMessage: string, headerLineOffset: number
 
     errors.push({
       line: 1,
-      message: cleanedMessage || errorMessage.trim()
+      message: cleanedMessage || errorMessage.trim(),
+      type: 'error' // Set type as error for fallback errors
     });
   }
 

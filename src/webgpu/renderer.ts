@@ -64,6 +64,14 @@ export async function initWebGPU(
     iChannel3: string | null;
   },
   onConsoleOutput?: (msg: string) => void,
+  onStructuredErrors?: (errors: Array<{
+    message: string;
+    line: number;
+    column: number;
+    type: string;
+    offset: number;
+    length: number;
+  }>) => void,
   vertexData: Float32Array | null = null
 ) {
   const output = (msg: string) => {
@@ -134,18 +142,38 @@ export async function initWebGPU(
 
     if (parsedCode.type === "vertex-fragment") {
       vertexEntry = parsedCode.entryPoints.vertex[0].name;
-      shaderModule = await compileShaderModule(device, fullShaderCode, output);
-      if (!shaderModule) return;
+      const compilationResult = await compileShaderModule(device, fullShaderCode, output);
+      if (!compilationResult.module) {
+        if (onStructuredErrors) onStructuredErrors(compilationResult.errors);
+        return;
+      }
 
+      shaderModule = compilationResult.module;
       vertexModule = shaderModule;
       fragmentModule = shaderModule;
 
-    } else {
-      vertexModule = await compileShaderModule(device, fullscreenVertexWGSL, output);
-      if (!vertexModule) return;
+      if (onStructuredErrors) onStructuredErrors(compilationResult.errors);
 
-      fragmentModule = await compileShaderModule(device, fullShaderCode, output);
-      if (!fragmentModule) return;
+    } else {
+      const vertexResult = await compileShaderModule(device, fullscreenVertexWGSL, output);
+      if (!vertexResult.module) {
+        if (onStructuredErrors) onStructuredErrors(vertexResult.errors);
+        return;
+      }
+      vertexModule = vertexResult.module;
+
+      const fragmentResult = await compileShaderModule(device, fullShaderCode, output);
+      if (!fragmentResult.module) {
+        if (onStructuredErrors) onStructuredErrors(fragmentResult.errors);
+        return;
+      }
+      fragmentModule = fragmentResult.module;
+
+      // Combine errors from both compilations
+      if (onStructuredErrors) {
+        const allErrors = [...vertexResult.errors, ...fragmentResult.errors];
+        onStructuredErrors(allErrors);
+      }
     }
 
     if (!selectedTextures.iChannel0) return output("No texture provided for iChannel0");

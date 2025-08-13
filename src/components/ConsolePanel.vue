@@ -11,10 +11,18 @@
       <!-- Structured error display -->
       <div v-if="structuredErrors.length > 0" class="structured-errors">
         <div v-for="(error, index) in structuredErrors" :key="index"
-             class="error-item">
+             class="error-item"
+             :class="{
+               'error-type-error': error.type === 'error',
+               'error-type-warning': error.type === 'warning',
+               'error-type-info': error.type === 'info'
+             }">
           <div class="error-header">
-            <n-tag type="error" size="small">
-              ERROR
+            <n-tag
+              :type="error.type === 'error' ? 'error' : error.type === 'warning' ? 'warning' : 'info'"
+              size="small"
+            >
+              {{ error.type?.toUpperCase() || 'ERROR' }}
             </n-tag>
             <button
               class="line-link"
@@ -44,12 +52,20 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { getHeaderLineOffset, parseWebGPUErrors } from '../webgpu/parser';
+import { parseWebGPUErrors, getHeaderLineOffset } from '../webgpu/parser';
 import { usesAnyTextures } from '../webgpu/textures';
 
 const props = defineProps<{
   consoleOutput: string;
   shaderCode?: string; // Add optional shader code prop
+  structuredErrors?: Array<{
+    message: string;
+    line: number;
+    column: number;
+    type: string;
+    offset: number;
+    length: number;
+  }>; // Direct structured errors from GPUCompilationInfo
 }>();
 
 const emit = defineEmits<{
@@ -83,12 +99,21 @@ function containsPattern(text: string, patterns: readonly string[]): boolean {
 
 // Parse console output into structured errors when possible
 const structuredErrors = computed(() => {
+  // Prioritize structured errors from GPUCompilationInfo if available
+  if (props.structuredErrors && props.structuredErrors.length > 0) {
+    console.log('Using structured errors from GPUCompilationInfo:', props.structuredErrors);
+    // structured errors line number already adjusted in shaders.ts
+
+    return props.structuredErrors;
+  }
+
+  // Fallback to pattern matching for cases where structured errors aren't available
   if (!props.consoleOutput) return [];
 
-  // Always try to parse errors, even if there are success messages mixed in
-  // filter out purely success messages later
-  const headerOffset = getHeaderLineOffset(usesAnyTextures(props.shaderCode));
-  const errors = parseWebGPUErrors(props.consoleOutput, headerOffset);
+  console.log('Falling back to pattern-based error parsing');
+  // Don't pass headerOffset because parseWebGPUErrors already adjusts line numbers internally
+  // when parsing from console output (which already includes the header)
+  const errors = parseWebGPUErrors(props.consoleOutput, 0);
 
   // Return structured errors if we found any meaningful ones
   return errors.filter(e => e.message && e.message.length > 0);
@@ -245,8 +270,22 @@ const tokens = computed(() => {
   padding: 12px;
   border-radius: 6px;
   border-left: 4px solid;
+}
+
+/* Error type specific styling */
+.error-type-error {
   background-color: rgba(255, 99, 99, 0.15);
   border-left-color: #ff6363;
+}
+
+.error-type-warning {
+  background-color: rgba(255, 193, 7, 0.15);
+  border-left-color: #ffc107;
+}
+
+.error-type-info {
+  background-color: rgba(23, 162, 184, 0.15);
+  border-left-color: #17a2b8;
 }
 
 .error-item .line-link {
@@ -280,6 +319,7 @@ const tokens = computed(() => {
   word-break: break-word;       /* break long words */
   overflow-wrap: break-word;    /* additional word breaking */
   max-width: 100%;              /* ensure it doesn't exceed container width */
+  white-space: pre-wrap;        /* preserve line breaks and spacing */
 }
 
 /* Compilation error styling for raw console output */
