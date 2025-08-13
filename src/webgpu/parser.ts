@@ -4,6 +4,7 @@ export interface ParsedError {
   message: string;
   line: number;
   column?: number;
+  type?: string; // Add optional type field for compatibility with GPUCompilationInfo
 }
 
 // Define error detection patterns for reuse
@@ -77,8 +78,8 @@ export function parseWGSL(wgslCode: string) {
   }
 }
 
-// Parse WebGPU compilation error messages into structured error objects
-export function parseWebGPUErrors(errorMessage: string, headerLineOffset: number = 0): ParsedError[] {
+// Parse error messages (WGSL parser errors) into structured error objects
+export function parseErrorMessages(errorMessage: string, headerLineOffset: number = 0): ParsedError[] {
   const errors: ParsedError[] = [];
 
   if (!errorMessage) return errors;
@@ -163,9 +164,22 @@ export function parseWebGPUErrors(errorMessage: string, headerLineOffset: number
         message = match[1].trim();
         line = parseInt(match[2], 10);
       } else if (match[0].includes('at line') && !match[0].includes('[error]')) {
-        // Pattern: "Expected ';' after statement at line 6" (but not compilation errors)
-        message = match[1].trim();
-        line = parseInt(match[2], 10);
+        // Supports both:
+        // 1) "at line N, column M: message"  (line-first, colon format)
+        // 2) "message at line N"             (message-first format)
+
+        if (match[3] && /:\s*/.test(match[0])) {
+          // Shape 1: "at line N, column M: message"
+          line = parseInt(match[1], 10);
+          if (match[2] && /^\d+$/.test(match[2])) {
+            column = parseInt(match[2], 10);
+          }
+          message = match[3].trim();
+        } else {
+          // Shape 2: "message at line N"
+          message = (match[1] || '').trim();
+          line = parseInt(match[2], 10);
+        }
       } else if (match[0].includes('error:') && match[0].includes('at line')) {
         // Pattern: "error: undeclared identifier 'variable' at line 4"
         message = match[1].trim();
@@ -202,7 +216,8 @@ export function parseWebGPUErrors(errorMessage: string, headerLineOffset: number
         errors.push({
           line: adjustedLine,
           column,
-          message: cleanErrorMessage(message)
+          message: cleanErrorMessage(message),
+          type: 'error' // Set type as error for pattern-matched errors
         });
 
         // Break out of pattern loop once we've found and processed errors
@@ -230,7 +245,8 @@ export function parseWebGPUErrors(errorMessage: string, headerLineOffset: number
 
         errors.push({
           line: adjustedLine,
-          message: errorMessage.trim()
+          message: errorMessage.trim(),
+          type: 'error' // Set type as error for generic line-based errors
         });
         break; // Only add one generic error
       }
@@ -247,7 +263,8 @@ export function parseWebGPUErrors(errorMessage: string, headerLineOffset: number
 
     errors.push({
       line: 1,
-      message: cleanedMessage || errorMessage.trim()
+      message: cleanedMessage || errorMessage.trim(),
+      type: 'error' // Set type as error for fallback errors
     });
   }
 

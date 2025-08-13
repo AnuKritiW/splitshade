@@ -102,7 +102,11 @@ describe('renderer.ts', () => {
 
     // replace shader source and shader compilation
     vi.spyOn(shaders, 'fullscreenVertexWGSL', 'get').mockReturnValue(fullscreenVertexWGSL);
-    vi.spyOn(shaders, 'compileShaderModule').mockResolvedValue({} as GPUShaderModule);
+    vi.spyOn(shaders, 'compileShaderModule').mockResolvedValue({
+      module: {} as GPUShaderModule,
+      errors: [],
+      hasErrors: false
+    });
 
     // mock uniform buffer creation
     vi.spyOn(uniforms, 'createUniforms').mockReturnValue({
@@ -151,7 +155,7 @@ describe('renderer.ts', () => {
   });
 
   // Test: if invalid shader, error log
-  it('should log error if shader is invalid', async () => {
+  it('should handle invalid shader errors through structured errors', async () => {
     vi.spyOn(parser, 'parseWGSL').mockReturnValue({
       type: 'fragment',
       valid: false,
@@ -159,15 +163,23 @@ describe('renderer.ts', () => {
     });
 
     const logSpy = vi.fn();
+    const structuredErrorsSpy = vi.fn();
 
     await initWebGPU(mockCanvas, 'invalid shader', {
       iChannel0: 'image.png',
       iChannel1: null,
       iChannel2: null,
       iChannel3: null,
-    }, logSpy);
+    }, logSpy, structuredErrorsSpy);
 
-    expect(logSpy).toHaveBeenCalledWith('Shader compilation failed');
+    expect(structuredErrorsSpy).toHaveBeenCalledWith([{
+      message: 'compilation failed',
+      line: 1,
+      column: 0,
+      type: 'error',
+      offset: 0,
+      length: 0
+    }]);
   });
 
   it('logs error if no entry points are found', async () => {

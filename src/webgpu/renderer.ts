@@ -1,4 +1,4 @@
-import { parseWGSL } from './parser';
+import { parseWGSL, parseErrorMessages } from './parser';
 import { loadDefaultTexture, usesAnyTextures } from './textures';
 import { getWebGPUDevice, configureCanvasContext } from './context';
 import { fullscreenVertexWGSL, injectedHeader, minimalHeader, compileShaderModule } from './shaders';
@@ -64,6 +64,14 @@ export async function initWebGPU(
     iChannel3: string | null;
   },
   onConsoleOutput?: (msg: string) => void,
+  onStructuredErrors?: (errors: Array<{
+    message: string;
+    line: number;
+    column: number;
+    type: string;
+    offset: number;
+    length: number;
+  }>) => void,
   vertexData: Float32Array | null = null
 ) {
   const output = (msg: string) => {
@@ -111,8 +119,38 @@ export async function initWebGPU(
 
     const parsedCode = parseWGSL(shaderCode);
 
-    // log the most relevant error message
-    if (!parsedCode.valid) return output(parsedCode.message || parsedCode.error || 'Invalid shader.');
+    // Handle parser errors as structured errors
+    if (!parsedCode.valid) {
+      const errorMessage = parsedCode.message || parsedCode.error || 'Invalid shader.';
+
+      // extract line number from parser error message
+      const parsedErrors = parseErrorMessages(errorMessage, 0);
+
+      if (parsedErrors.length > 0) {
+        // convert ParsedError to the expected structured error format
+        const structuredErrors = parsedErrors.map(error => ({
+          message: error.message,
+          line: error.line,
+          column: error.column || 0,
+          type: error.type || 'error',
+          offset: 0,
+          length: 0
+        }));
+        onStructuredErrors?.(structuredErrors);
+      } else {
+        // fallback for un-parseable errors
+        const parserError = {
+          message: errorMessage,
+          line: 1,
+          column: 0,
+          type: 'error',
+          offset: 0,
+          length: 0
+        };
+        onStructuredErrors?.([parserError]);
+      }
+      return;
+    }
 
     if (!parsedCode.entryPoints || Object.values(parsedCode.entryPoints).every(arr => !arr?.length))
       return console.error("No entry points found in shader code.");
@@ -134,18 +172,38 @@ export async function initWebGPU(
 
     if (parsedCode.type === "vertex-fragment") {
       vertexEntry = parsedCode.entryPoints.vertex[0].name;
-      shaderModule = await compileShaderModule(device, fullShaderCode, output);
-      if (!shaderModule) return;
+      const compilationResult = await compileShaderModule(device, fullShaderCode);
+      if (!compilationResult.module) {
+        if (onStructuredErrors) onStructuredErrors(compilationResult.errors);
+        return;
+      }
 
+      shaderModule = compilationResult.module;
       vertexModule = shaderModule;
       fragmentModule = shaderModule;
 
-    } else {
-      vertexModule = await compileShaderModule(device, fullscreenVertexWGSL, output);
-      if (!vertexModule) return;
+      if (onStructuredErrors) onStructuredErrors(compilationResult.errors);
 
-      fragmentModule = await compileShaderModule(device, fullShaderCode, output);
-      if (!fragmentModule) return;
+    } else {
+      const vertexResult = await compileShaderModule(device, fullscreenVertexWGSL);
+      if (!vertexResult.module) {
+        if (onStructuredErrors) onStructuredErrors(vertexResult.errors);
+        return;
+      }
+      vertexModule = vertexResult.module;
+
+      const fragmentResult = await compileShaderModule(device, fullShaderCode);
+      if (!fragmentResult.module) {
+        if (onStructuredErrors) onStructuredErrors(fragmentResult.errors);
+        return;
+      }
+      fragmentModule = fragmentResult.module;
+
+      // Combine errors from both compilations
+      if (onStructuredErrors) {
+        const allErrors = [...vertexResult.errors, ...fragmentResult.errors];
+        onStructuredErrors(allErrors);
+      }
     }
 
     if (!selectedTextures.iChannel0) return output("No texture provided for iChannel0");
@@ -205,10 +263,29 @@ export async function initWebGPU(
 
     // Pop error scope
     const error = await device.popErrorScope();
-    if (error) output(`WebGPU Error: ${error.message}`);
-    else output(`Shader compiled and executed successfully.`);
+    if (error) {
+      const runtimeError = {
+        message: `WebGPU Runtime Error: ${error.message}`,
+        line: 1, // Runtime errors don't have specific line info
+        column: 0,
+        type: 'error',
+        offset: 0,
+        length: 0
+      };
+      onStructuredErrors?.([runtimeError]);
+    } else {
+      output(`Shader compiled and executed successfully.`);
+    }
 
   } catch (err: any) {
-    output(`Caught Exception: ${err.message || err}`);
+    const exceptionError = {
+      message: `Caught Exception: ${err.message || err}`,
+      line: 1,
+      column: 0,
+      type: 'error',
+      offset: 0,
+      length: 0
+    };
+    onStructuredErrors?.([exceptionError]);
   }
 }

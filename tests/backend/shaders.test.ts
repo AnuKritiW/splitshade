@@ -22,8 +22,6 @@ describe('shaders module', () => {
   })
 
   describe('compileShaderModule', () => {
-    const mockOutput = vi.fn()
-
     const mockDevice = {
       createShaderModule: vi.fn(({ code }) => ({
         code,
@@ -32,9 +30,10 @@ describe('shaders module', () => {
     } as unknown as GPUDevice
 
     it('returns module if no messages', async () => {
-      const module = await compileShaderModule(mockDevice, 'fake shader code', mockOutput)
-      expect(module).not.toBeNull()
-      expect(mockOutput).not.toHaveBeenCalled()
+      const result = await compileShaderModule(mockDevice, 'fake shader code')
+      expect(result.module).not.toBeNull()
+      expect(result.errors.length).toBe(0)
+      expect(result.hasErrors).toBe(false)
     })
 
     it('returns module if only warnings', async () => {
@@ -45,11 +44,13 @@ describe('shaders module', () => {
         })),
       } as unknown as GPUDevice
 
-      const outputFn = vi.fn()
-      const module = await compileShaderModule(deviceWithWarning, 'some shader', outputFn)
+      const result = await compileShaderModule(deviceWithWarning, 'some shader')
 
-      expect(module).not.toBeNull()
-      expect(outputFn).toHaveBeenCalledWith(expect.stringContaining('[warning] L1:1 This is a warning'))
+      expect(result.module).not.toBeNull()
+      expect(result.errors.length).toBe(1)
+      expect(result.errors[0].type).toBe('warning')
+      expect(result.errors[0].message).toBe('This is a warning')
+      expect(result.hasErrors).toBe(false)
     })
 
     it('returns null if any message is an error', async () => {
@@ -60,11 +61,13 @@ describe('shaders module', () => {
         })),
       } as unknown as GPUDevice
 
-      const outputFn = vi.fn()
-      const result = await compileShaderModule(deviceWithError, 'broken shader', outputFn)
+      const result = await compileShaderModule(deviceWithError, 'broken shader')
 
-      expect(result).toBeNull()
-      expect(outputFn).toHaveBeenCalledWith(expect.stringContaining('[error] L2:4 Syntax error'))
+      expect(result.module).toBeNull()
+      expect(result.errors.length).toBe(1)
+      expect(result.errors[0].type).toBe('error')
+      expect(result.errors[0].message).toBe('Syntax error')
+      expect(result.hasErrors).toBe(true)
     })
   })
 })

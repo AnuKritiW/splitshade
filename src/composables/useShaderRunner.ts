@@ -14,12 +14,21 @@ export function useShaderRunner() {
     textures,
     mesh,
     onLog,
+    onStructuredErrors,
   }: {
     canvas: HTMLCanvasElement,
     code: string,
     textures: Record<string, string>,
     mesh: Float32Array | null,
-    onLog: (msg: string) => void
+    onLog: (msg: string) => void,
+    onStructuredErrors?: (errors: Array<{
+      message: string;
+      line: number;
+      column: number;
+      type: string;
+      offset: number;
+      length: number;
+    }>) => void
   }) {
     const strictTextures: ChannelMap = {
       iChannel0: textures.iChannel0 ?? null,
@@ -28,7 +37,7 @@ export function useShaderRunner() {
       iChannel3: textures.iChannel3 ?? null,
     }
 
-    initWebGPU(canvas, code, strictTextures, onLog, mesh)
+    initWebGPU(canvas, code, strictTextures, onLog, onStructuredErrors, mesh)
   }
 
   return { runShader }
