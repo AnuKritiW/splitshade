@@ -104,7 +104,7 @@ const ConsolePanelStub = defineComponent({
   name: 'ConsolePanel',
   props: ['consoleOutput', 'shaderCode'],
   emits: ['go-to-line'],
-  setup(props, { emit }) {
+  setup(_props, { emit }) {
     // expose an action to trigger go-to-line from tests if needed
     return () =>
       h('div', { 'data-stub': 'ConsolePanel', onClick: () => emit('go-to-line', 42, 7) })
