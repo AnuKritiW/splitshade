@@ -102,7 +102,11 @@ describe('renderer.ts', () => {
 
     // replace shader source and shader compilation
     vi.spyOn(shaders, 'fullscreenVertexWGSL', 'get').mockReturnValue(fullscreenVertexWGSL);
-    vi.spyOn(shaders, 'compileShaderModule').mockResolvedValue({} as GPUShaderModule);
+    vi.spyOn(shaders, 'compileShaderModule').mockResolvedValue({
+      module: {} as GPUShaderModule,
+      errors: [],
+      hasErrors: false
+    });
 
     // mock uniform buffer creation
     vi.spyOn(uniforms, 'createUniforms').mockReturnValue({
