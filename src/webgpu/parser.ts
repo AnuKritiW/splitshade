@@ -78,8 +78,8 @@ export function parseWGSL(wgslCode: string) {
   }
 }
 
-// Parse WebGPU compilation error messages into structured error objects
-export function parseWebGPUErrors(errorMessage: string, headerLineOffset: number = 0): ParsedError[] {
+// Parse error messages (WGSL parser errors) into structured error objects
+export function parseErrorMessages(errorMessage: string, headerLineOffset: number = 0): ParsedError[] {
   const errors: ParsedError[] = [];
 
   if (!errorMessage) return errors;

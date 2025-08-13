@@ -1,4 +1,4 @@
-import { parseWGSL, parseWebGPUErrors } from './parser';
+import { parseWGSL, parseErrorMessages } from './parser';
 import { loadDefaultTexture, usesAnyTextures } from './textures';
 import { getWebGPUDevice, configureCanvasContext } from './context';
 import { fullscreenVertexWGSL, injectedHeader, minimalHeader, compileShaderModule } from './shaders';
@@ -124,7 +124,7 @@ export async function initWebGPU(
       const errorMessage = parsedCode.message || parsedCode.error || 'Invalid shader.';
 
       // extract line number from parser error message
-      const parsedErrors = parseWebGPUErrors(errorMessage, 0);
+      const parsedErrors = parseErrorMessages(errorMessage, 0);
 
       if (parsedErrors.length > 0) {
         // convert ParsedError to the expected structured error format
