@@ -1,5 +1,6 @@
 import { mount, type MountingOptions, type VueWrapper } from '@vue/test-utils'
 import type { Component, ComponentPublicInstance } from 'vue'
+import { vi } from 'vitest'
 
 // Default stub config to avoid warnings for external components during testing
 const defaultGlobalStubs = {
@@ -9,12 +10,46 @@ const defaultGlobalStubs = {
   'n-card': {
     template: '<div><slot /></div>',
   },
+  // Stub for EditorPanel that emits editor-ready event
+  EditorPanel: {
+    name: 'EditorPanel',
+    props: ['code', 'runShader'],
+    emits: ['update:code', 'go-to-line', 'reset-to-default', 'clear', 'editor-ready'],
+    template: `<div>Editor Panel Mock</div>`,
+    mounted() {
+      // @ts-ignore - Vue component context
+      this.$nextTick(() => {
+        // @ts-ignore - Vue component context
+        this.$emit('editor-ready')
+      })
+    }
+  },
   // Stub <VueMonacoEditor> with a basic <textarea> that emits 'change' on input
   VueMonacoEditor: {
     name: 'VueMonacoEditor',
     props: ['value'],
-    emits: ['change'],
+    emits: ['change', 'mount'],
     template: `<textarea :value="value" @input="$emit('change', $event.target.value)" />`,
+    mounted() {
+      // Simulate the editor mount event which triggers the editor-ready event in the real component
+      // @ts-ignore - Vue component context
+      this.$nextTick(() => {
+        // @ts-ignore - Vue component context
+        this.$emit('mount', {
+          setValue: vi.fn(),
+          // @ts-ignore - Vue component context
+          getValue: () => this.value,
+          onDidChangeModelContent: () => ({ dispose: vi.fn() }),
+          getModel: () => ({
+            getFullModelRange: () => ({ startLineNumber: 1, startColumn: 1, endLineNumber: 1, endColumn: 1 })
+          }),
+          executeEdits: vi.fn(),
+          setPosition: vi.fn(),
+          focus: vi.fn(),
+          revealLineInCenter: vi.fn()
+        })
+      })
+    }
   },
 }
 

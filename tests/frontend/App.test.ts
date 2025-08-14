@@ -92,9 +92,15 @@ const EditorPanelExpose = () =>
   defineComponent({
     name: 'EditorPanel',
     props: ['runShader', 'code'],
-    emits: ['go-to-line', 'update:code'],
-    setup(_, { expose }) {
+    emits: ['go-to-line', 'update:code', 'editor-ready'],
+    setup(_, { expose, emit }) {
       expose({ goToLine: editorGoToLineSpy })
+
+      // Emit editor-ready on next tick to simulate the real component behavior
+      nextTick(() => {
+        emit('editor-ready')
+      })
+
       return () => h('div', { 'data-stub': 'EditorPanel' })
     },
   })
