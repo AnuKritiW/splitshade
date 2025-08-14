@@ -109,33 +109,23 @@ export async function initWebGPU(
 
     const { context, format } = configureCanvasContext(canvas, device);
 
-    // Function to update canvas size
+    // Set initial canvas size with device pixel ratio
     const updateCanvasSize = () => {
-      canvas.width = canvas.clientWidth * window.devicePixelRatio;
-      canvas.height = canvas.clientHeight * window.devicePixelRatio;
-      context.configure({
-        device,
-        format,
-        alphaMode: 'premultiplied',
-      });
+      const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1; // fallback to 1 for tests
+      canvas.width = canvas.clientWidth * dpr;
+      canvas.height = canvas.clientHeight * dpr;
     };
 
-    // set initial canvas size
     updateCanvasSize();
 
-    // resize listener
-    const resizeObserver = new ResizeObserver(() => {
-      updateCanvasSize();
-    });
-    resizeObserver.observe(canvas);
-
-    // cleanup for resize observer
-    const cleanup = () => {
-      resizeObserver.disconnect();
-    };
-
-    // store cleanup function for cancellation
-    currentCleanup = cleanup;
+    // Add resize observer for responsive canvas resizing (only in browser environment)
+    let cleanup: (() => void) | null = null;
+    if (typeof window !== 'undefined' && 'ResizeObserver' in window) {
+      const resizeObserver = new ResizeObserver(updateCanvasSize);
+      resizeObserver.observe(canvas);
+      cleanup = () => resizeObserver.disconnect();
+      currentCleanup = cleanup;
+    }
 
     const mouse = { x: 0, y: 0, down: false };
 
