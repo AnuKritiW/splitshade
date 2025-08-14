@@ -2,6 +2,7 @@ html, body, #app, .n-layout {
   margin: 0;
   padding: 0;
   height: 100%;
+  background-color: #101014; /* Ensure dark background extends beyond viewport */
 }
 
 /* Root grid with two rows: header + panels */
