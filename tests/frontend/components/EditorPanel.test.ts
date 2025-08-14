@@ -90,6 +90,9 @@ describe('EditorPanel.vue', () => {
       revealLineInCenter: revealSpy,
       setPosition: setPosSpy,
       focus: focusSpy,
+      setValue: vi.fn(),
+      getValue: vi.fn(() => 'test code'),
+      onDidChangeModelContent: vi.fn(() => ({ dispose: vi.fn() })),
     }
     wrapper.findComponent({ name: 'VueMonacoEditor' }).vm.$emit('mount', fakeEditor)
 
