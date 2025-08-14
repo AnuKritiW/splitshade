@@ -36,13 +36,16 @@ html, body, #app, .n-layout {
 .texture-buttons {
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
   gap: 8px;
   padding: 8px;
 }
 
 /* Base button layout: sizing and appearance */
 .texture-buttons .n-button {
-  flex: 1;
+  flex: 1 1 0;                /* Equal flex basis ensures uniform sizing */
+  min-width: 80px;
+  max-width: calc(25% - 6px); /* Never exceed 1/4 of container width minus gap adjustment */
   aspect-ratio: 1 / .4;       /* Makes them square */
   height: auto;               /* Let height be defined by width via aspect ratio */
   padding: 0;                 /* Removes inner padding for tighter fit */
