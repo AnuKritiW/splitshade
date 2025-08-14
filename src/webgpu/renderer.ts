@@ -6,12 +6,19 @@ import { createUniforms } from './uniforms';
 import { createPipeline } from './pipeline';
 
 let currentFrameId: number | null = null;
+let currentCleanup: (() => void) | null = null;
 
 // Cancel any active render loop
 export function cancelCurrentRenderLoop() {
   if (currentFrameId !== null) {
     cancelAnimationFrame(currentFrameId);
     currentFrameId = null;
+  }
+
+  // ensure ResizeObserver is disconnected before a new one is started
+  if (currentCleanup) {
+    currentCleanup();
+    currentCleanup = null;
   }
 }
 
@@ -102,8 +109,23 @@ export async function initWebGPU(
 
     const { context, format } = configureCanvasContext(canvas, device);
 
-    canvas.width = canvas.clientWidth * window.devicePixelRatio;
-    canvas.height = canvas.clientHeight * window.devicePixelRatio;
+    // Set initial canvas size with device pixel ratio
+    const updateCanvasSize = () => {
+      const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1; // fallback to 1 for tests
+      canvas.width = canvas.clientWidth * dpr;
+      canvas.height = canvas.clientHeight * dpr;
+    };
+
+    updateCanvasSize();
+
+    // Add resize observer for responsive canvas resizing (only in browser environment)
+    let cleanup: (() => void) | null = null;
+    if (typeof window !== 'undefined' && 'ResizeObserver' in window) {
+      const resizeObserver = new ResizeObserver(updateCanvasSize);
+      resizeObserver.observe(canvas);
+      cleanup = () => resizeObserver.disconnect();
+      currentCleanup = cleanup;
+    }
 
     const mouse = { x: 0, y: 0, down: false };
 

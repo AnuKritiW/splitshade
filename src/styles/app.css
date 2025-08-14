@@ -2,6 +2,7 @@ html, body, #app, .n-layout {
   margin: 0;
   padding: 0;
   height: 100%;
+  background-color: #101014; /* Ensure dark background extends beyond viewport */
 }
 
 /* Root grid with two rows: header + panels */
@@ -13,26 +14,39 @@ html, body, #app, .n-layout {
 
 .grid-container {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 3fr 1fr;
+  /* grid-template-columns: 1fr 1fr; */
+  /* grid-template-rows: 3fr 1fr; */
+  grid-template-columns: minmax(300px, 1fr) minmax(100px, 1fr);
+  grid-template-rows: minmax(175px, 3fr) minmax(210px, 1fr);
   gap: 12px;
   padding: 12px;
   background-color: #101014;
   box-sizing: border-box;
   height: 100%; /* fill the minmax row */
+  min-height: 0; /* Allow grid items to shrink below their content size */
+}
+
+/* Ensure all grid items have proper height constraints */
+/* >* is a CSS child combinator selector. i.e. all direct children are selected */
+.grid-container > * {
+  min-height: 0;
+  height: 100%;
 }
 
 /* Container for texture buttons inside 'Textures' tab */
 .texture-buttons {
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
   gap: 8px;
   padding: 8px;
 }
 
 /* Base button layout: sizing and appearance */
 .texture-buttons .n-button {
-  flex: 1;
+  flex: 1 1 0;                /* Equal flex basis ensures uniform sizing */
+  min-width: 80px;
+  max-width: calc(25% - 6px); /* Never exceed 1/4 of container width minus gap adjustment */
   aspect-ratio: 1 / .4;       /* Makes them square */
   height: auto;               /* Let height be defined by width via aspect ratio */
   padding: 0;                 /* Removes inner padding for tighter fit */

@@ -54,6 +54,7 @@ const showMeshModalProxy = computed({
     size="small"
     embedded
     class="resources-card"
+    style="grid-row: 2; grid-column: 1;"
   >
     <n-tabs type="segment" animated>
       <n-tab-pane name="textures" tab="Textures">
@@ -80,7 +81,7 @@ const showMeshModalProxy = computed({
       </n-tab-pane>
 
       <n-tab-pane name="mesh" tab="Mesh">
-        <div style="display:inline-flex; align-items:center; gap:8px; margin-top:8px;">
+        <div class="mesh-buttons-row">
           <n-button @click="$emit('openMeshModal')">Select / Upload .OBJ Mesh</n-button>
           <n-button
             :disabled="!uploadedMesh.name"
@@ -92,7 +93,7 @@ const showMeshModalProxy = computed({
           </n-button>
         </div>
 
-        <div style="margin-top:12px; display: flex; align-items: center; gap: 12px;">
+        <div class="mesh-actions-row">
           <n-button ghost size="small" @click="$emit('copyStarterCode')" :render-icon="renderClipboardIcon">
             Copy Starter Shader
           </n-button>
@@ -116,3 +117,56 @@ const showMeshModalProxy = computed({
     />
   </n-card>
 </template>
+
+<style scoped>
+.resources-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.resources-card :deep(.n-card) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.resources-card :deep(.n-card__content) {
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Responsive mesh buttons */
+.mesh-buttons-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.mesh-buttons-row .n-button {
+  flex: 0 1 auto; /* don't grow, but can shrink */
+  min-width: 0;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mesh-actions-row {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mesh-actions-row .n-button {
+  flex: 0 1 auto; /* don't grow, but can shrink */
+  min-width: 0;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+</style>
