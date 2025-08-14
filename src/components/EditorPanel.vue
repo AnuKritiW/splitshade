@@ -17,9 +17,10 @@
       :value="localCode"
       @change="onCodeChange"
       @mount="onEditorMount"
-      style="height: 100%; width: 100%;"
+      style="flex: 1; min-height: 0;"
       :options="editorOptions"
     />
+    <!-- flex 1 above ensures editor takes space within the container while still respecting footer element-->
     <template #footer>
       <n-button @click="runShader" block>Run Shader</n-button>
     </template>
@@ -145,7 +146,42 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.panel {
+  background-color: #1a1a1a;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
 .editor {
-  grid-row: 1 / span 2; /* Span both rows */
+  grid-row: 1;
+  grid-column: 1;
+}
+
+/* Ensure the card structure maintains proper layout */
+.editor :deep(.n-card) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor :deep(.n-card__content) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* Allow Monaco to shrink */
+  overflow: hidden;
+}
+
+/* Footer should never shrink; we need Run Shader button to always be visible */
+.editor :deep(.n-card__footer) {
+  flex-shrink: 0;
+}
+
+/* Monaco Editor container should flex within the card content */
+.editor :deep(.monaco-editor) {
+  flex: 1;
+  min-height: 0;
 }
 </style>

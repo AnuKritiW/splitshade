@@ -54,6 +54,7 @@ const showMeshModalProxy = computed({
     size="small"
     embedded
     class="resources-card"
+    style="grid-row: 2; grid-column: 1;"
   >
     <n-tabs type="segment" animated>
       <n-tab-pane name="textures" tab="Textures">
@@ -116,3 +117,22 @@ const showMeshModalProxy = computed({
     />
   </n-card>
 </template>
+
+<style scoped>
+.resources-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.resources-card :deep(.n-card) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.resources-card :deep(.n-card__content) {
+  flex: 1;
+  overflow: hidden;
+}
+</style>

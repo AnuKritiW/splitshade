@@ -13,13 +13,23 @@ html, body, #app, .n-layout {
 
 .grid-container {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 3fr 1fr;
+  /* grid-template-columns: 1fr 1fr; */
+  /* grid-template-rows: 3fr 1fr; */
+  grid-template-columns: minmax(300px, 1fr) minmax(100px, 1fr);
+  grid-template-rows: minmax(175px, 3fr) minmax(210px, 1fr);
   gap: 12px;
   padding: 12px;
   background-color: #101014;
   box-sizing: border-box;
   height: 100%; /* fill the minmax row */
+  min-height: 0; /* Allow grid items to shrink below their content size */
+}
+
+/* Ensure all grid items have proper height constraints */
+/* >* is a CSS child combinator selector. i.e. all direct children are selected */
+.grid-container > * {
+  min-height: 0;
+  height: 100%;
 }
 
 /* Container for texture buttons inside 'Textures' tab */
