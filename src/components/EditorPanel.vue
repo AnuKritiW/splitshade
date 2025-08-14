@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onBeforeUnmount } from 'vue'
 import { VueMonacoEditor } from '@guolao/vue-monaco-editor'
 import * as monaco from 'monaco-editor'
 
@@ -31,6 +31,7 @@ const emit = defineEmits(['update:code', 'go-to-line'])
 const localCode = ref(props.code)
 const editorRef = ref()
 let editorInstance: monaco.editor.IStandaloneCodeEditor | null = null
+let disposeListeners: monaco.IDisposable[] = []
 
 // Editor options
 const editorOptions = {
@@ -40,6 +41,25 @@ const editorOptions = {
   minimap: { enabled: false },
   scrollBeyondLastLine: false,
   wordWrap: 'on' as const,
+}
+
+// add local persistence for editor contents
+function persistEditor(editor: monaco.editor.IStandaloneCodeEditor, key = 'splitshade:editorCode:v1') {
+  // load saved code from localStorage
+  const savedCode = localStorage.getItem(key)
+  if (savedCode && savedCode !== props.code) {
+    editor.setValue(savedCode)
+    localCode.value = savedCode
+    emit('update:code', savedCode)
+  }
+
+  // save code on content change
+  const dispose = editor.onDidChangeModelContent(() => {
+    const currentValue = editor.getValue()
+    localStorage.setItem(key, currentValue)
+  })
+
+  disposeListeners.push(dispose)
 }
 
 // Update localCode when parent changes
@@ -62,6 +82,7 @@ function onCodeChange(val: string) {
 // Handle editor mount
 function onEditorMount(editor: monaco.editor.IStandaloneCodeEditor) {
   editorInstance = editor
+  persistEditor(editor)
 }
 
 // Method to programmatically go to a specific line and optionally column
@@ -76,6 +97,12 @@ function goToLine(lineNumber: number, column?: number) {
 // Expose methods for parent components
 defineExpose({
   goToLine
+})
+
+// cleanup listeners on component unmount
+onBeforeUnmount(() => {
+  disposeListeners.forEach(dispose => dispose.dispose())
+  disposeListeners = []
 })
 
 </script>
