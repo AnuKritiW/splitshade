@@ -1,12 +1,22 @@
 <script setup lang="ts">
 import { darkTheme } from 'naive-ui'
-import { ref, onMounted, nextTick } from 'vue'
-const code = ref(`@fragment
+import { ref, nextTick } from 'vue'
+
+const DEFAULT_SHADER_CODE = `@fragment
 fn main(@builtin(position) coord: vec4<f32>) -> @location(0) vec4<f32> {
     let uv = coord.xy / iResolution.xy;
     let color = vec3<f32>(uv.x, uv.y, 0.5);
     return vec4<f32>(color, 1.0);
-}`)
+}`
+
+const code = ref(DEFAULT_SHADER_CODE)
+
+// Auto-run shader only once when editor is ready (not on subsequent code changes)
+function handleEditorReady() {
+  nextTick(() => {
+    handleRunShader()
+  })
+}
 
 import { loader } from '@guolao/vue-monaco-editor'
 import { LogoGithub } from '@vicons/ionicons5'
@@ -103,13 +113,29 @@ function handleGoToLine(line: number, column?: number) {
   }
 }
 
-// auto-run the initial shader when the app mounts
-onMounted(() => {
-  // Wait for the next DOM update cycle to ensure all child components are rendered
-  nextTick(() => {
-    handleRunShader()
-  })
-})
+function handleResetToDefault() {
+  // reset to default code
+  // note that this is undoable
+  // don't remove localStorage; editor's persistence handles it naturally
+  if (editorRef.value?.replaceAllContent) {
+    editorRef.value.replaceAllContent(DEFAULT_SHADER_CODE)
+  } else {
+    // Fallback to direct assignment if editor ref is not ready
+    code.value = DEFAULT_SHADER_CODE
+  }
+}
+
+function handleClear() {
+  // clear editor
+  // note that this is undoable
+  // don't remove localStorage; editor's persistence handles it naturally
+  if (editorRef.value?.replaceAllContent) {
+    editorRef.value.replaceAllContent('')
+  } else {
+    // Fallback to direct assignment if editor ref is not ready
+    code.value = ''
+  }
+}
 </script>
 
 <template>
@@ -161,6 +187,9 @@ onMounted(() => {
           v-model:code="code"
           :runShader="handleRunShader"
           @go-to-line="handleGoToLine"
+          @reset-to-default="handleResetToDefault"
+          @clear="handleClear"
+          @editor-ready="handleEditorReady"
         />
 
         <!-- Preview (top-right) -->

@@ -1,5 +1,15 @@
 <template>
   <n-card title="Editor" size="small" class="panel editor" style="grid-row: 1; grid-column: 1;">
+    <template #header-extra>
+      <div style="display: flex; gap: 8px;">
+        <n-button size="small" ghost @click="resetToDefault">
+          Reset to Default
+        </n-button>
+        <n-button size="small" ghost @click="clearEditor">
+          Clear
+        </n-button>
+      </div>
+    </template>
     <VueMonacoEditor
       ref="editorRef"
       language="wgsl"
@@ -17,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onBeforeUnmount } from 'vue'
+import { ref, watch, onBeforeUnmount, nextTick } from 'vue'
 import { VueMonacoEditor } from '@guolao/vue-monaco-editor'
 import * as monaco from 'monaco-editor'
 
@@ -26,7 +36,7 @@ const props = defineProps<{
   runShader: () => void
 }>()
 
-const emit = defineEmits(['update:code', 'go-to-line'])
+const emit = defineEmits(['update:code', 'go-to-line', 'reset-to-default', 'clear', 'editor-ready'])
 
 const localCode = ref(props.code)
 const editorRef = ref()
@@ -50,7 +60,7 @@ function persistEditor(editor: monaco.editor.IStandaloneCodeEditor, key = 'split
   if (savedCode && savedCode !== props.code) {
     editor.setValue(savedCode)
     localCode.value = savedCode
-    emit('update:code', savedCode)
+    emit('update:code', savedCode)  // triggers code.value = persisted code
   }
 
   // save code on content change
@@ -60,6 +70,11 @@ function persistEditor(editor: monaco.editor.IStandaloneCodeEditor, key = 'split
   })
 
   disposeListeners.push(dispose)
+
+  // Signal that editor is ready (persistence has been loaded)
+  nextTick(() => {
+    emit('editor-ready')
+  })
 }
 
 // Update localCode when parent changes
@@ -79,6 +94,16 @@ function onCodeChange(val: string) {
   emit('update:code', val)
 }
 
+// Reset to default code
+function resetToDefault() {
+  emit('reset-to-default')
+}
+
+// Clear editor content
+function clearEditor() {
+  emit('clear')
+}
+
 // Handle editor mount
 function onEditorMount(editor: monaco.editor.IStandaloneCodeEditor) {
   editorInstance = editor
@@ -96,7 +121,19 @@ function goToLine(lineNumber: number, column?: number) {
 
 // Expose methods for parent components
 defineExpose({
-  goToLine
+  goToLine,
+  replaceAllContent: (newContent: string) => {
+    if (editorInstance) {
+      const model = editorInstance.getModel()
+      if (model) {
+        const fullRange = model.getFullModelRange()
+        editorInstance.executeEdits('reset-or-clear', [{
+          range: fullRange,
+          text: newContent
+        }])
+      }
+    }
+  }
 })
 
 // cleanup listeners on component unmount
