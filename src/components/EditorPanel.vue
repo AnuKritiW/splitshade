@@ -1,5 +1,15 @@
 <template>
   <n-card title="Editor" size="small" class="panel editor" style="grid-row: 1; grid-column: 1;">
+    <template #header-extra>
+      <div style="display: flex; gap: 8px;">
+        <n-button size="small" ghost @click="resetToDefault">
+          Reset to Default
+        </n-button>
+        <n-button size="small" ghost @click="clearEditor">
+          Clear
+        </n-button>
+      </div>
+    </template>
     <VueMonacoEditor
       ref="editorRef"
       language="wgsl"
@@ -17,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onBeforeUnmount, nextTick } from 'vue'
 import { VueMonacoEditor } from '@guolao/vue-monaco-editor'
 import * as monaco from 'monaco-editor'
 
@@ -26,11 +36,12 @@ const props = defineProps<{
   runShader: () => void
 }>()
 
-const emit = defineEmits(['update:code', 'go-to-line'])
+const emit = defineEmits(['update:code', 'go-to-line', 'reset-to-default', 'clear', 'editor-ready'])
 
 const localCode = ref(props.code)
 const editorRef = ref()
 let editorInstance: monaco.editor.IStandaloneCodeEditor | null = null
+let disposeListeners: monaco.IDisposable[] = []
 
 // Editor options
 const editorOptions = {
@@ -40,6 +51,30 @@ const editorOptions = {
   minimap: { enabled: false },
   scrollBeyondLastLine: false,
   wordWrap: 'on' as const,
+}
+
+// add local persistence for editor contents
+function persistEditor(editor: monaco.editor.IStandaloneCodeEditor, key = 'splitshade:editorCode:v1') {
+  // load saved code from localStorage
+  const savedCode = localStorage.getItem(key)
+  if (savedCode && savedCode !== props.code) {
+    editor.setValue(savedCode)
+    localCode.value = savedCode
+    emit('update:code', savedCode)  // triggers code.value = persisted code
+  }
+
+  // save code on content change
+  const dispose = editor.onDidChangeModelContent(() => {
+    const currentValue = editor.getValue()
+    localStorage.setItem(key, currentValue)
+  })
+
+  disposeListeners.push(dispose)
+
+  // Signal that editor is ready (persistence has been loaded)
+  nextTick(() => {
+    emit('editor-ready')
+  })
 }
 
 // Update localCode when parent changes
@@ -59,9 +94,20 @@ function onCodeChange(val: string) {
   emit('update:code', val)
 }
 
+// Reset to default code
+function resetToDefault() {
+  emit('reset-to-default')
+}
+
+// Clear editor content
+function clearEditor() {
+  emit('clear')
+}
+
 // Handle editor mount
 function onEditorMount(editor: monaco.editor.IStandaloneCodeEditor) {
   editorInstance = editor
+  persistEditor(editor)
 }
 
 // Method to programmatically go to a specific line and optionally column
@@ -75,7 +121,25 @@ function goToLine(lineNumber: number, column?: number) {
 
 // Expose methods for parent components
 defineExpose({
-  goToLine
+  goToLine,
+  replaceAllContent: (newContent: string) => {
+    if (editorInstance) {
+      const model = editorInstance.getModel()
+      if (model) {
+        const fullRange = model.getFullModelRange()
+        editorInstance.executeEdits('reset-or-clear', [{
+          range: fullRange,
+          text: newContent
+        }])
+      }
+    }
+  }
+})
+
+// cleanup listeners on component unmount
+onBeforeUnmount(() => {
+  disposeListeners.forEach(dispose => dispose.dispose())
+  disposeListeners = []
 })
 
 </script>
