@@ -1,4 +1,4 @@
-import { useTextures } from '@/composables/useTextures'
+import { useTextures } from '@/ui/composables/useTextures'
 
 describe('useTextures', () => {
 

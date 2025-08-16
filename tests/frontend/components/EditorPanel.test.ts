@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import EditorPanel from '@/components/EditorPanel.vue'
+import EditorPanel from '@/ui/components/panels/EditorPanel.vue'
 import { mountWithGlobalStubs } from '../utils/mountWithGlobalStubs'
 
 

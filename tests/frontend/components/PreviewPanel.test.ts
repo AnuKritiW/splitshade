@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import PreviewPanel from '@/components/PreviewPanel.vue'
+import PreviewPanel from '@/ui/components/panels/PreviewPanel.vue'
 import { mountWithGlobalStubs } from '../utils/mountWithGlobalStubs'
 
 describe('PreviewPanel.vue', () => {

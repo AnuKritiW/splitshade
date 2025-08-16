@@ -1,4 +1,4 @@
-import { useMesh } from '@/composables/useMesh'
+import { useMesh } from '@/ui/composables/useMesh'
 import { vi } from 'vitest'
 import { waitFor } from '@testing-library/vue'
 

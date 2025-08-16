@@ -14,8 +14,8 @@
 import { computed, h } from 'vue'
 import { NIcon } from 'naive-ui'
 import { ClipboardOutline } from '@vicons/ionicons5'
-import TextureModal from './TextureModal.vue'
-import MeshModal from './MeshModal.vue'
+import TextureModal from '../modals/TextureModal.vue'
+import MeshModal from '../modals/MeshModal.vue'
 
 /** Type definition for shader texture channel identifiers */
 type ChannelKey = 'iChannel0' | 'iChannel1' | 'iChannel2' | 'iChannel3'

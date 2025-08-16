@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import TextureModal from '@/components/TextureModal.vue'
+import TextureModal from '@/ui/components/modals/TextureModal.vue'
 import { mountModalWithStubs } from '../utils/mountWithGlobalStubs'
 
 function mountTextureModal(customProps = {}) {

@@ -1,4 +1,4 @@
-import { useShaderRunner } from '@/composables/useShaderRunner'
+import { useShaderRunner } from '@/ui/composables/useShaderRunner'
 import { vi } from 'vitest'
 
 // Mock initWebGPU

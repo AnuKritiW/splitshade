@@ -47,15 +47,15 @@ function handleEditorReady() {
 import { loader } from '@guolao/vue-monaco-editor'
 import { LogoGithub } from '@vicons/ionicons5'
 
-import { useShaderRunner } from './composables/useShaderRunner'
-import ConsolePanel from './components/ConsolePanel.vue'
-import PreviewPanel from './components/PreviewPanel.vue'
-import EditorPanel from './components/EditorPanel.vue'
-import { useTextures } from './composables/useTextures'
-import { useMesh } from './composables/useMesh'
-import ResourcesPanel from './components/ResourcesPanel.vue'
-import WebGPUWarning from './components/WebGPUWarning.vue'
-import './styles/app.css'
+import { useShaderRunner } from './ui/composables/useShaderRunner'
+import ConsolePanel from './ui/components/panels/ConsolePanel.vue'
+import PreviewPanel from './ui/components/panels/PreviewPanel.vue'
+import EditorPanel from './ui/components/panels/EditorPanel.vue'
+import { useTextures } from './ui/composables/useTextures'
+import { useMesh } from './ui/composables/useMesh'
+import ResourcesPanel from './ui/components/panels/ResourcesPanel.vue'
+import WebGPUWarning from './ui/components/WebGPUWarning.vue'
+import './ui/styles/app.css'
 
 const {
   selectedTextures,

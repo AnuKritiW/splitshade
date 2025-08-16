@@ -36,7 +36,7 @@ const uploadedMesh = { name: 'foo.obj', vertexData: new Float32Array([0, 1, 2]) 
 const presetMeshes = ref([{ name: 'teapot', path: '/mesh/teapot.obj' }])
 
 // create spy func to track when shaders are run
-vi.mock('../../src/composables/useShaderRunner', () => ({
+vi.mock('../../src/ui/composables/useShaderRunner', () => ({
   useShaderRunner: () => ({
     runShader: (args: any) => {
       runShaderSpy(args)
@@ -47,7 +47,7 @@ vi.mock('../../src/composables/useShaderRunner', () => ({
 }))
 
 // mock texture management with fake data
-vi.mock('../../src/composables/useTextures', () => ({
+vi.mock('../../src/ui/composables/useTextures', () => ({
   useTextures: () => ({
     selectedTextures: selectedTexturesRef,
     allTextures: ref(['tex0.png', 'tex2.png']),
@@ -59,7 +59,7 @@ vi.mock('../../src/composables/useTextures', () => ({
 }))
 
 // mock mesh management with fake data
-vi.mock('../../src/composables/useMesh', () => ({
+vi.mock('../../src/ui/composables/useMesh', () => ({
   useMesh: () => ({
     showMeshModal: showMeshModalRef,
     uploadedMesh,

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import WebGPUWarning from '@/components/WebGPUWarning.vue'
+import WebGPUWarning from '@/ui/components/WebGPUWarning.vue'
 import { mountWithGlobalStubs } from '../utils/mountWithGlobalStubs'
 import { nextTick } from 'vue'
 

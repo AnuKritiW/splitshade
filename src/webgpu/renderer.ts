@@ -24,7 +24,7 @@ let currentCleanup: (() => void) | null = null;
 
 /**
  * Cancels the current render loop and performs cleanup.
- * 
+ *
  * Stops the active animation frame and executes any pending cleanup operations.
  * Used internally to prevent multiple render loops from running simultaneously.
  */
