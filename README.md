@@ -129,25 +129,6 @@ src/
 └── styles/                 # Global styles
 ```
 
-## Contributing
-
-1. **Fork** the repository
-2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
-3. **Commit** your changes (`git commit -m 'Add amazing feature'`)
-4. **Push** to the branch (`git push origin feature/amazing-feature`)
-5. **Open** a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- **WebGPU Working Group** for the amazing graphics API
-- **Monaco Editor** team for the excellent code editor
-- **Vue.js** community for the fantastic framework
-- **Vite** team for the blazing fast build tool
-
 ## Links
 
 - [Live Demo](https://anukritiw.github.io/splitshade/)
