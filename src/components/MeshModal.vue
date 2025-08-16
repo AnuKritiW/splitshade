@@ -9,10 +9,10 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'update:show', val: boolean): void
-  (e: 'selectPresetMesh', meshName: string): void
-  (e: 'downloadMesh', meshName: string): void
-  (e: 'handleUpload', payload: { file: any; onFinish: () => void }): void
+  'update:show': [val: boolean]
+  'selectPresetMesh': [meshName: string]
+  'downloadMesh': [meshName: string]
+  'handleUpload': [payload: { file: any; onFinish: () => void }]
 }>()
 
 const showProxy = computed({
@@ -37,6 +37,10 @@ watch(
     }
   }
 )
+
+function handleUpload(payload: { file: any; onFinish: () => void }) {
+  emit('handleUpload', payload)
+}
 </script>
 
 <template>
@@ -61,8 +65,8 @@ watch(
             <n-button
               text
               size="small"
-              @click="emit('downloadMesh', mesh)"
               title="Open raw .obj in new tab"
+              @click="emit('downloadMesh', mesh)"
             >
               <NIcon size="18">
                 <DownloadOutline />
@@ -74,7 +78,7 @@ watch(
 
       <n-upload
         accept=".obj"
-        :custom-request="(payload) => emit('handleUpload', payload)"
+        :custom-request="handleUpload"
         :show-file-list="false"
       >
         <n-button block>Upload New .OBJ Mesh</n-button>

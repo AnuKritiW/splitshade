@@ -89,7 +89,7 @@ function handleRunShader() {
   structuredErrors.value = []
 
   const validTextures = Object.fromEntries(
-    Object.entries(selectedTextures.value).filter(([_, v]) => typeof v === 'string' && v !== null)
+    Object.entries(selectedTextures.value).filter(([, v]) => typeof v === 'string' && v !== null)
   ) as Record<string, string>
 
   runShader({
@@ -136,6 +136,14 @@ function handleClear() {
     code.value = ''
   }
 }
+
+function handleUpdateShowTextureModal(val: boolean) {
+  showTextureModal.value = val
+}
+
+function handleUpdateShowMeshModal(val: boolean) {
+  showMeshModal.value = val
+}
 </script>
 
 <template>
@@ -146,10 +154,10 @@ function handleClear() {
         <div class="header-content">
           <h2
             style="margin: 0; color: white; cursor: pointer; user-select: none; transition: opacity 0.2s ease;"
+            title="Click to open documentation"
             @click="openDocs"
             @mouseenter="handleTitleHover($event, '0.8')"
             @mouseleave="handleTitleHover($event, '1')"
-            title="Click to open documentation"
           >
             SplitShade: WebGPU Playground
           </h2>
@@ -157,8 +165,8 @@ function handleClear() {
             <n-button
               class="docs-button"
               text
-              @click="openDocs"
               title="Read the docs"
+              @click="openDocs"
             >
               <span>Docs ↗</span>
             </n-button>
@@ -212,8 +220,8 @@ function handleClear() {
           @selectPresetMesh="selectPresetMesh"
           @downloadMesh="downloadMesh"
           @handleMeshUpload="handleMeshUpload"
-          @update:showTextureModal="(val: boolean) => showTextureModal = val"
-          @update:showMeshModal="(val: boolean) => showMeshModal = val"
+          @update:showTextureModal="handleUpdateShowTextureModal"
+          @update:showMeshModal="handleUpdateShowMeshModal"
         />
 
         <!-- Console (bottom-right) -->
@@ -221,8 +229,8 @@ function handleClear() {
           :console-output="consoleOutput"
           :shader-code="code"
           :structured-errors="structuredErrors"
-          @go-to-line="handleGoToLine"
           style="grid-row: 2; grid-column: 2;"
+          @go-to-line="handleGoToLine"
         />
 
       </div>

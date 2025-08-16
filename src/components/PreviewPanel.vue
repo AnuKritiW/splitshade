@@ -1,6 +1,6 @@
 <template>
   <n-card title="Preview" size="small" class="panel" style="grid-row: 1; grid-column: 2;">
-    <canvas ref="canvasRef" id="gfx" style="width: 100%; height: 100%;"></canvas>
+    <canvas id="gfx" ref="canvasRef" style="width: 100%; height: 100%;" />
   </n-card>
 </template>
 

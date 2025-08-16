@@ -8,9 +8,9 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'update:show', val: boolean): void
-  (e: 'selectTexture', img: string): void
-  (e: 'handleUpload', payload: { file: any, onFinish: () => void }): void
+  'update:show': [val: boolean]
+  'selectTexture': [img: string]
+  'handleUpload': [payload: { file: any, onFinish: () => void }]
 }>()
 
 // Required to support v-model:show cleanly
@@ -18,6 +18,10 @@ const showProxy = computed({
   get: () => props.show,
   set: (val) => emit('update:show', val)
 })
+
+function handleUpload(payload: { file: any; onFinish: () => void }) {
+  emit('handleUpload', payload)
+}
 </script>
 
 <template>
@@ -32,14 +36,14 @@ const showProxy = computed({
           width="80"
           height="80"
           style="cursor: pointer; border-radius: 4px"
-          @click="emit('selectTexture', img)"
           :preview-disabled="true"
+          @click="emit('selectTexture', img)"
         />
       </div>
       <!-- upload button -->
       <n-upload
         accept="image/*"
-        :custom-request="(payload) => emit('handleUpload', payload)"
+        :custom-request="handleUpload"
         :show-file-list="false"
       >
         <n-button block>Upload New Texture</n-button>

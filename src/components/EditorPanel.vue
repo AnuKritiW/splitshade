@@ -15,14 +15,14 @@
       language="wgsl"
       theme="vs-dark"
       :value="localCode"
-      @change="onCodeChange"
-      @mount="onEditorMount"
       style="flex: 1; min-height: 0;"
       :options="editorOptions"
+      @change="onCodeChange"
+      @mount="onEditorMount"
     />
     <!-- flex 1 above ensures editor takes space within the container while still respecting footer element-->
     <template #footer>
-      <n-button @click="runShader" block>Run Shader</n-button>
+      <n-button block @click="runShader">Run Shader</n-button>
     </template>
   </n-card>
 </template>

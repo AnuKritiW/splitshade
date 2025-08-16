@@ -18,17 +18,17 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'openTextureModal', channel: ChannelKey): void
-  (e: 'openMeshModal'): void
-  (e: 'removeMesh'): void
-  (e: 'copyStarterCode'): void
-  (e: 'selectTexture', img: string): void
-  (e: 'handleTextureUpload', payload: { file: File; onFinish: () => void }): void
-  (e: 'selectPresetMesh', mesh: string): void
-  (e: 'downloadMesh', mesh: string): void
-  (e: 'handleMeshUpload', options: any): void
-  (e: 'update:showTextureModal', value: boolean): void
-  (e: 'update:showMeshModal', value: boolean): void
+  'openTextureModal': [channel: ChannelKey]
+  'openMeshModal': []
+  'removeMesh': []
+  'copyStarterCode': []
+  'selectTexture': [img: string]
+  'handleTextureUpload': [payload: { file: File; onFinish: () => void }]
+  'selectPresetMesh': [mesh: string]
+  'downloadMesh': [mesh: string]
+  'handleMeshUpload': [options: any]
+  'update:showTextureModal': [value: boolean]
+  'update:showMeshModal': [value: boolean]
 }>()
 
 function renderClipboardIcon() {
@@ -46,6 +46,14 @@ const showMeshModalProxy = computed({
   get: () => props.showMeshModal,
   set: (val) => emit('update:showMeshModal', val)
 })
+
+function handleSelectTexture(img: string) {
+  emit('selectTexture', img)
+}
+
+function handleTextureUpload(payload: { file: any; onFinish: () => void }) {
+  emit('handleTextureUpload', payload)
+}
 </script>
 
 <template>
@@ -64,8 +72,8 @@ const showMeshModalProxy = computed({
             :key="channel"
             size="small"
             block
-            @click="$emit('openTextureModal', channel)"
             class="n-button texture-button"
+            @click="$emit('openTextureModal', channel)"
           >
             <template #default>
               <img
@@ -73,7 +81,7 @@ const showMeshModalProxy = computed({
                 :src="selectedTextures[channel]"
                 :alt="channel"
                 class="button-bg"
-              />
+              >
               <span class="button-label">{{ channel }}</span>
             </template>
           </n-button>
@@ -94,7 +102,7 @@ const showMeshModalProxy = computed({
         </div>
 
         <div class="mesh-actions-row">
-          <n-button ghost size="small" @click="$emit('copyStarterCode')" :render-icon="renderClipboardIcon">
+          <n-button ghost size="small" :render-icon="renderClipboardIcon" @click="$emit('copyStarterCode')">
             Copy Starter Shader
           </n-button>
         </div>
@@ -104,8 +112,8 @@ const showMeshModalProxy = computed({
     <TextureModal
       v-model:show="showTextureModalProxy"
       :allTextures="allTextures"
-      @selectTexture="(img: string) => emit('selectTexture', img)"
-      @handleUpload="(payload: { file: any; onFinish: () => void }) => emit('handleTextureUpload', payload)"
+      @selectTexture="handleSelectTexture"
+      @handleUpload="handleTextureUpload"
     />
 
     <MeshModal

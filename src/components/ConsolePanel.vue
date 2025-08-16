@@ -10,13 +10,15 @@
 
       <!-- System-generated errors from WebGPU (below the line) -->
       <div v-if="structuredErrors.length > 0" class="structured-errors">
-        <div v-for="(error, index) in structuredErrors" :key="index"
+        <div
+v-for="(error, index) in structuredErrors" :key="index"
              class="error-item"
              :class="{
                'error-type-error': error.type === 'error',
                'error-type-warning': error.type === 'warning',
                'error-type-info': error.type === 'info'
-             }">
+             }"
+>
           <div class="error-header">
             <n-tag
               :type="error.type === 'error' ? 'error' : error.type === 'warning' ? 'warning' : 'info'"
@@ -27,8 +29,8 @@
             <button
               class="line-link"
               type="button"
-              @click="emit('go-to-line', error.line, error.column)"
               :title="`Jump to line ${error.line}${error.column ? `, column ${error.column}` : ''}`"
+              @click="emit('go-to-line', error.line, error.column)"
             >
               Line {{ error.line }}{{ error.column ? `:${error.column}` : '' }}
             </button>
@@ -58,7 +60,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: 'go-to-line', line: number, column?: number): void
+  'go-to-line': [line: number, column?: number]
 }>()
 
 // Use structured errors from WebGPU's GPUCompilationInfo
