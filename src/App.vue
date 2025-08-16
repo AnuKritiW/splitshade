@@ -1,7 +1,27 @@
 <script setup lang="ts">
+/**
+ * SplitShade WebGPU Playground - Main Application Component
+ *
+ * A browser-based shader editor and renderer for WGSL (WebGPU Shading Language).
+ * Provides a complete development environment with:
+ * - Monaco-based code editor with WGSL syntax highlighting
+ * - Real-time WebGPU shader compilation and rendering
+ * - Texture management and upload capabilities
+ * - 3D mesh loading and visualization
+ * - Comprehensive error reporting and debugging tools
+ * - Export and sharing functionality
+ *
+ * The interface is organized in a 2x2 grid layout:
+ * - Top-left: Code editor with shader controls
+ * - Top-right: Real-time preview canvas
+ * - Bottom-left: Texture and mesh resource management
+ * - Bottom-right: Console with compilation output and errors
+ */
+
 import { darkTheme } from 'naive-ui'
 import { ref, nextTick } from 'vue'
 
+/** Default fragment shader code displayed on application startup */
 const DEFAULT_SHADER_CODE = `@fragment
 fn main(@builtin(position) coord: vec4<f32>) -> @location(0) vec4<f32> {
     let uv = coord.xy / iResolution.xy;
@@ -9,9 +29,15 @@ fn main(@builtin(position) coord: vec4<f32>) -> @location(0) vec4<f32> {
     return vec4<f32>(color, 1.0);
 }`
 
+/** Reactive reference to the current shader code in the editor */
 const code = ref(DEFAULT_SHADER_CODE)
 
-// Auto-run shader only once when editor is ready (not on subsequent code changes)
+/**
+ * Handles the editor ready event by auto-running the default shader.
+ *
+ * This ensures users see immediate visual feedback when the application loads,
+ * demonstrating that the WebGPU pipeline is working correctly.
+ */
 function handleEditorReady() {
   nextTick(() => {
     handleRunShader()
@@ -61,21 +87,37 @@ loader.config({
 const previewRef = ref<InstanceType<typeof PreviewPanel> | null>(null)
 const editorRef = ref<InstanceType<typeof EditorPanel> | null>(null)
 const consoleOutput = ref("")
+/** Reactive array storing structured error information from shader compilation */
 const structuredErrors = ref<Array<{
+  /** Human-readable error message */
   message: string;
+  /** Line number in user code where error occurred */
   line: number;
+  /** Column number where error occurred */
   column: number;
+  /** Error type (error, warning, info) */
   type: string;
+  /** Character offset in source code */
   offset: number;
+  /** Length of the problematic code section */
   length: number;
 }>>([])
 
 const { runShader } = useShaderRunner()
 
+/**
+ * Opens the SplitShade documentation in a new tab.
+ */
 function openDocs() {
   window.open('https://anukritiw.github.io/splitshade-docs/', '_blank')
 }
 
+/**
+ * Handles hover effects on the application title.
+ *
+ * @param event - Mouse event from the title element
+ * @param opacity - Target opacity value as a string
+ */
 function handleTitleHover(event: MouseEvent, opacity: string) {
   const target = event.target as HTMLElement
   if (target) {
@@ -83,11 +125,19 @@ function handleTitleHover(event: MouseEvent, opacity: string) {
   }
 }
 
+/**
+ * Compiles and runs the current shader code with selected textures and mesh data.
+ *
+ * Clears previous output, processes texture inputs, and initiates the WebGPU
+ * rendering pipeline. Results are displayed in the preview canvas with any
+ * compilation messages or errors shown in the console panel.
+ */
 function handleRunShader() {
   if (!previewRef.value?.canvasRef) return
   consoleOutput.value = ''
   structuredErrors.value = []
 
+  // Filter out null texture values to create a clean texture map
   const validTextures = Object.fromEntries(
     Object.entries(selectedTextures.value).filter(([, v]) => typeof v === 'string' && v !== null)
   ) as Record<string, string>
@@ -106,6 +156,15 @@ function handleRunShader() {
   })
 }
 
+/**
+ * Navigates the editor to a specific line and column.
+ *
+ * Used primarily for error navigation - when users click on error messages
+ * in the console, this function jumps the editor cursor to the problematic code.
+ *
+ * @param line - Line number to navigate to (1-based)
+ * @param column - Optional column number to navigate to (1-based)
+ */
 function handleGoToLine(line: number, column?: number) {
   console.log(`App.vue: navigating to line ${line}${column ? `, column ${column}` : ''}`);
   if (editorRef.value) {

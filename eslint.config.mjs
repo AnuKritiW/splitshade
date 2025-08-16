@@ -31,6 +31,8 @@ export default [
       // Keep TSDoc on
       'tsdoc/syntax': 'warn',
 
+      'no-trailing-spaces': 'error',
+
       // Calm the noise while you migrate
       // 'no-undef' is incorrect for TS (TS handles this)
       'no-undef': 'off',
@@ -59,6 +61,8 @@ export default [
     rules: {
       // Keep TSDoc checks available (rare in .vue but fine)
       'tsdoc/syntax': 'warn',
+
+      'no-trailing-spaces': 'error',
 
       // Relax Vue formatting/casing rules to match your current code
       'vue/attribute-hyphenation': 'off',

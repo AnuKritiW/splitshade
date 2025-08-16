@@ -1,31 +1,71 @@
 import { ref, reactive } from 'vue'
 import { parseObjToVertices } from '../utils/objParser'
 
+/**
+ * Vue composable for managing 3D mesh uploads and preset meshes.
+ *
+ * Provides functionality for loading preset meshes, handling user uploads,
+ * and generating appropriate shader starter code for mesh rendering.
+ *
+ * @returns Object containing mesh state and management functions
+ *
+ * @example
+ * ```typescript
+ * const { uploadedMesh, selectPresetMesh, copyStarterCode } = useMesh()
+ *
+ * // Load a preset mesh
+ * selectPresetMesh('sphere.obj')
+ *
+ * // Copy starter code for vertex shaders
+ * copyStarterCode()
+ * ```
+ */
 export function useMesh() {
+  /** Controls visibility of the mesh selection modal */
   const showMeshModal = ref(false)
 
+  /**
+   * Reactive object containing the currently loaded mesh data.
+   * Includes both raw .obj content and parsed vertex data for GPU upload.
+   */
   const uploadedMesh = reactive({
+    /** Display name of the loaded mesh file */
     name: '',
-    content: '',                            // raw .obj text
-    vertexData: null as Float32Array | null // parsed vertex buffer
+    /** Raw .obj file content as text */
+    content: '',
+    /** Parsed vertex data ready for WebGPU vertex buffer */
+    vertexData: null as Float32Array | null
   })
 
+  /** Array of available preset mesh filenames */
   const presetMeshes = [
     'triangle.obj',
     'sphere.obj',
     'circle.obj'
   ]
 
+  /**
+   * Opens the mesh selection modal.
+   */
   function openMeshModal() {
     showMeshModal.value = true
   }
 
+  /**
+   * Clears the currently loaded mesh data.
+   */
   function removeMesh() {
     uploadedMesh.name = ''
     uploadedMesh.content = ''
     uploadedMesh.vertexData = null
   }
 
+  /**
+   * Copies vertex shader starter code to the clipboard.
+   *
+   * Provides a complete vertex+fragment shader template that works
+   * with uploaded mesh data, including proper attribute bindings.
+   */
   function copyStarterCode() {
     const defaultCode = `
 // Default shader code for uploaded mesh
@@ -54,6 +94,14 @@ fn main_fs(@location(0) color: vec3<f32>) -> @location(0) vec4<f32> {
       .catch(err => console.error("Failed to copy:", err))
   }
 
+  /**
+   * Handles mesh file uploads from the user.
+   *
+   * Reads the uploaded .obj file, parses it into vertex data,
+   * and updates the uploadedMesh reactive object.
+   *
+   * @param params - Upload parameters containing file and onFinish callback
+   */
   function handleMeshUpload({ file, onFinish }: any) {
     const reader = new FileReader()
     reader.onload = () => {
@@ -72,6 +120,14 @@ fn main_fs(@location(0) color: vec3<f32>) -> @location(0) vec4<f32> {
     reader.readAsText(file.file)
   }
 
+  /**
+   * Loads a preset mesh from the server.
+   *
+   * Fetches the .obj file from the public mesh directory,
+   * parses it, and updates the uploadedMesh state.
+   *
+   * @param meshName - Filename of the preset mesh to load
+   */
   function selectPresetMesh(meshName: string) {
     fetch(`/splitshade/mesh/${meshName}`)
       .then(res => res.text())
@@ -86,6 +142,14 @@ fn main_fs(@location(0) color: vec3<f32>) -> @location(0) vec4<f32> {
     showMeshModal.value = false
   }
 
+  /**
+   * Downloads a preset mesh file to the user's computer.
+   *
+   * Creates a temporary download link and triggers the browser's
+   * download mechanism for the specified mesh file.
+   *
+   * @param meshName - Filename of the mesh to download
+   */
   function downloadMesh(meshName: string) {
     if (!meshName) return
     const link = document.createElement('a')

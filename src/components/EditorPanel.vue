@@ -1,3 +1,14 @@
+<!--
+/**
+ * EditorPanel Component
+ *
+ * Monaco editor interface for WGSL shader development with syntax highlighting,
+ * error navigation, and shader execution controls. Provides a full-featured
+ * code editing experience within the shader playground.
+ *
+ * @component
+ */
+-->
 <template>
   <n-card title="Editor" size="small" class="panel editor" style="grid-row: 1; grid-column: 1;">
     <template #header-extra>
@@ -32,11 +43,27 @@ import { ref, watch, onBeforeUnmount, nextTick } from 'vue'
 import { VueMonacoEditor } from '@guolao/vue-monaco-editor'
 import * as monaco from 'monaco-editor'
 
+/**
+ * Component props interface.
+ *
+ * @param code - Current shader source code
+ * @param runShader - Function to execute the shader
+ */
 const props = defineProps<{
   code: string
   runShader: () => void
 }>()
 
+/**
+ * Component event emissions.
+ *
+ * Emits the following events:
+ * - update:code: Emitted when editor content changes
+ * - go-to-line: Emitted to navigate to specific line number
+ * - reset-to-default: Emitted when reset button is clicked
+ * - clear: Emitted when clear button is clicked
+ * - editor-ready: Emitted when Monaco editor is initialized
+ */
 const emit = defineEmits(['update:code', 'go-to-line', 'reset-to-default', 'clear', 'editor-ready'])
 
 const localCode = ref(props.code)
@@ -54,7 +81,15 @@ const editorOptions = {
   wordWrap: 'on' as const,
 }
 
-// add local persistence for editor contents
+/**
+ * Provides local persistence for editor contents using localStorage.
+ *
+ * Automatically saves editor content on changes and restores saved content
+ * when the editor mounts. Enables work preservation across browser sessions.
+ *
+ * @param editor - Monaco editor instance
+ * @param key - localStorage key for persisting content
+ */
 function persistEditor(editor: monaco.editor.IStandaloneCodeEditor, key = 'splitshade:editorCode:v1') {
   // load saved code from localStorage
   const savedCode = localStorage.getItem(key)
@@ -78,40 +113,61 @@ function persistEditor(editor: monaco.editor.IStandaloneCodeEditor, key = 'split
   })
 }
 
-// Update localCode when parent changes
+/**
+ * Synchronizes local state when parent code prop changes.
+ *
+ * Ensures editor content stays consistent with external updates
+ * while preventing infinite update loops.
+ */
 watch(() => props.code, (newVal) => {
   if (newVal !== localCode.value) {
     localCode.value = newVal
   }
 })
 
-// Monaco doesn't have native syntax validation for WGSL
-// so rely on the console panel for error display
-// instead of editor markers (i.e. gutter markers, squiggly lines)
-
-// Emit updates when localCode changes
+/**
+ * Handles editor content changes and emits updates to parent.
+ *
+ * @param val - New editor content
+ */
 function onCodeChange(val: string) {
   localCode.value = val
   emit('update:code', val)
 }
 
-// Reset to default code
+/**
+ * Emits reset-to-default event to parent component.
+ */
 function resetToDefault() {
   emit('reset-to-default')
 }
 
-// Clear editor content
+/**
+ * Emits clear event to parent component.
+ */
 function clearEditor() {
   emit('clear')
 }
 
-// Handle editor mount
+/**
+ * Handles Monaco editor initialization and setup.
+ *
+ * @param editor - Mounted Monaco editor instance
+ */
 function onEditorMount(editor: monaco.editor.IStandaloneCodeEditor) {
   editorInstance = editor
   persistEditor(editor)
 }
 
-// Method to programmatically go to a specific line and optionally column
+/**
+ * Programmatically navigates to a specific line and column in the editor.
+ *
+ * Used for error navigation when users click on console error messages.
+ * Reveals the target line and focuses the editor for immediate editing.
+ *
+ * @param lineNumber - Target line number (1-based)
+ * @param column - Target column number (1-based, optional)
+ */
 function goToLine(lineNumber: number, column?: number) {
   if (editorInstance) {
     editorInstance.revealLineInCenter(lineNumber)
@@ -120,7 +176,12 @@ function goToLine(lineNumber: number, column?: number) {
   }
 }
 
-// Expose methods for parent components
+/**
+ * Exposed component methods for parent component access.
+ *
+ * Allows parent components to programmatically control editor behavior
+ * such as navigation to specific lines for error handling.
+ */
 defineExpose({
   goToLine,
   replaceAllContent: (newContent: string) => {

@@ -1,24 +1,59 @@
+<!--
+/**
+ * TextureModal Component
+ *
+ * Modal interface for texture selection and upload in the shader playground.
+ * Displays available textures in a grid layout and provides upload functionality
+ * for custom texture assets to be used in iChannel bindings.
+ *
+ * @component
+ */
+-->
 <script setup lang="ts">
 import { computed } from 'vue'
 import { NModal, NCard, NImage, NUpload, NButton } from 'naive-ui'
 
+/**
+ * Component props interface.
+ *
+ * @param show - Modal visibility state
+ * @param allTextures - Array of available texture URLs for selection
+ */
 const props = defineProps<{
   show: boolean
   allTextures: string[]
 }>()
 
+/**
+ * Component event emissions.
+ *
+ * Emits the following events:
+ * - update:show: Emitted when modal visibility changes (v-model support)
+ * - selectTexture: Emitted when a texture is selected from the grid
+ * - handleUpload: Emitted when a new texture file is uploaded
+ */
 const emit = defineEmits<{
   'update:show': [val: boolean]
   'selectTexture': [img: string]
   'handleUpload': [payload: { file: any, onFinish: () => void }]
 }>()
 
-// Required to support v-model:show cleanly
+/**
+ * Computed property for v-model:show support.
+ *
+ * Provides two-way binding for modal visibility state with
+ * proper getter/setter implementation for Vue's v-model directive.
+ */
 const showProxy = computed({
   get: () => props.show,
   set: (val) => emit('update:show', val)
 })
 
+/**
+ * Handles texture file upload operations.
+ *
+ * @param payload - Upload payload containing file and completion callback
+ */
 function handleUpload(payload: { file: any; onFinish: () => void }) {
   emit('handleUpload', payload)
 }

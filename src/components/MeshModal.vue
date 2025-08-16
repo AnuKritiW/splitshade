@@ -1,13 +1,39 @@
+<!--
+/**
+ * MeshModal Component
+ *
+ * Modal interface for 3D mesh selection and upload in the shader playground.
+ * Provides access to preset geometry and custom .obj file upload capabilities
+ * for vertex-based shader rendering.
+ *
+ * @component
+ */
+-->
 <script setup lang="ts">
 import { computed, nextTick, watch } from 'vue'
 import { NModal, NCard, NSpace, NButton, NIcon, NUpload } from 'naive-ui'
 import { DownloadOutline } from '@vicons/ionicons5'
 
+/**
+ * Component props interface.
+ *
+ * @param show - Modal visibility state
+ * @param presetMeshes - Array of available preset mesh names
+ */
 const props = defineProps<{
   show: boolean
   presetMeshes: string[]
 }>()
 
+/**
+ * Component event emissions.
+ *
+ * Emits the following events:
+ * - update:show: Emitted when modal visibility changes (v-model support)
+ * - selectPresetMesh: Emitted when a preset mesh is selected
+ * - downloadMesh: Emitted when mesh download is requested
+ * - handleUpload: Emitted when a custom .obj file is uploaded
+ */
 const emit = defineEmits<{
   'update:show': [val: boolean]
   'selectPresetMesh': [meshName: string]
@@ -15,14 +41,24 @@ const emit = defineEmits<{
   'handleUpload': [payload: { file: any; onFinish: () => void }]
 }>()
 
+/**
+ * Computed property for v-model:show support.
+ *
+ * Provides two-way binding for modal visibility state with
+ * proper getter/setter implementation for Vue's v-model directive.
+ */
 const showProxy = computed({
   get: () => props.show,
   set: (val) => emit('update:show', val),
 })
 
-// Prevent misleading focus highlight on first preset button when modal opens
-// Browsers auto-focus the first focusable element (the first .obj button), which Naive UI styles with a green outline
-// This watch removes focus from that element after the modal is mounted to avoid visual confusion
+/**
+ * Prevents misleading focus highlight on modal open.
+ *
+ * Browsers auto-focus the first focusable element when modals open,
+ * which can cause visual confusion with Naive UI's focus styling.
+ * This watcher removes focus after the modal mounts.
+ */
 watch(
   () => props.show,
   (newVal) => {
@@ -38,6 +74,11 @@ watch(
   }
 )
 
+/**
+ * Handles mesh file upload operations.
+ *
+ * @param payload - Upload payload containing .obj file and completion callback
+ */
 function handleUpload(payload: { file: any; onFinish: () => void }) {
   emit('handleUpload', payload)
 }

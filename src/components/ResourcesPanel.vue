@@ -1,33 +1,63 @@
 <script setup lang="ts">
+/**
+ * ResourcesPanel Component
+ *
+ * Manages texture and mesh resources for the shader editor.
+ * Provides tabbed interface for:
+ * - Texture selection and upload for iChannel0-3 slots
+ * - 3D mesh loading (preset and user uploads)
+ * - Utility functions like copying starter shader code
+ *
+ * Integrates with modal components for detailed resource selection.
+ */
+
 import { computed, h } from 'vue'
 import { NIcon } from 'naive-ui'
 import { ClipboardOutline } from '@vicons/ionicons5'
 import TextureModal from './TextureModal.vue'
 import MeshModal from './MeshModal.vue'
 
+/** Type definition for shader texture channel identifiers */
 type ChannelKey = 'iChannel0' | 'iChannel1' | 'iChannel2' | 'iChannel3'
 const channelList: ChannelKey[] = ['iChannel0', 'iChannel1', 'iChannel2', 'iChannel3']
 
 const props = defineProps<{
+  /** Currently selected textures for each channel (URL or null) */
   selectedTextures: Record<string, string | null>
+  /** Array of all available texture URLs */
   allTextures: string[]
+  /** Controls visibility of the texture selection modal */
   showTextureModal: boolean
+  /** Controls visibility of the mesh selection modal */
   showMeshModal: boolean
+  /** Array of preset mesh filenames available for loading */
   presetMeshes: string[]
+  /** Information about the currently uploaded mesh */
   uploadedMesh: { name: string }
 }>()
 
 const emit = defineEmits<{
+  /** Request to open texture modal for specific channel */
   'openTextureModal': [channel: ChannelKey]
+  /** Request to open mesh selection modal */
   'openMeshModal': []
+  /** Request to remove currently loaded mesh */
   'removeMesh': []
+  /** Request to copy vertex shader starter code to clipboard */
   'copyStarterCode': []
+  /** User selected a texture from the texture modal */
   'selectTexture': [img: string]
+  /** User uploaded a new texture file */
   'handleTextureUpload': [payload: { file: File; onFinish: () => void }]
+  /** User selected a preset mesh */
   'selectPresetMesh': [mesh: string]
+  /** User requested to download a mesh file */
   'downloadMesh': [mesh: string]
+  /** User uploaded a new mesh file */
   'handleMeshUpload': [options: any]
+  /** Texture modal visibility state changed */
   'update:showTextureModal': [value: boolean]
+  /** Mesh modal visibility state changed */
   'update:showMeshModal': [value: boolean]
 }>()
 

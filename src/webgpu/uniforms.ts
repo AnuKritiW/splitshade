@@ -1,3 +1,29 @@
+/**
+ * WebGPU Uniform Buffer Management
+ *
+ * This module handles creation and management of uniform buffers and bind groups
+ * for shader parameters including time, resolution, mouse coordinates, and textures.
+ */
+
+/**
+ * Creates uniform buffers and bind groups for shader rendering.
+ *
+ * Sets up the standard uniform layout used by fragment shaders including
+ * resolution, time, mouse coordinates, and dynamic texture bindings.
+ *
+ * @param device - WebGPU device instance
+ * @param canvas - Canvas element for resolution calculations
+ * @param textureBindings - Array of texture/sampler pairs for iChannel slots
+ *
+ * @returns Object containing bind group layout, bind group, time buffer, and utilities
+ *
+ * @remarks
+ * - Binding layout: resolution (0), time (1), mouse (2), then texture pairs starting at 3
+ * - Each texture uses 2 bindings: texture view (base + 0) and sampler (base + 1)
+ * - Time buffer is updated each frame for animation support
+ * - Mouse buffer reserved for future interactive features
+ * - Supports up to 4 texture channels (iChannel0-3)
+ */
 export function createUniforms(
   device: GPUDevice,
   canvas: HTMLCanvasElement,
@@ -94,7 +120,7 @@ export function createUniforms(
     entries,
   });
 
-  return { 
+  return {
     bindGroupLayout,
     bindGroup,
     timeBuffer,

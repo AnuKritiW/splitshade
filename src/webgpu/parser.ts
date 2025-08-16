@@ -1,10 +1,17 @@
 import { WgslReflect } from 'wgsl_reflect';
 
+/**
+ * Represents a parsed WGSL compilation error with location information.
+ */
 export interface ParsedError {
+  /** Human-readable error message */
   message: string;
+  /** Line number where the error occurred (1-based) */
   line: number;
+  /** Column number where the error occurred (1-based), if available */
   column?: number;
-  type?: string; // Add optional type field for compatibility with GPUCompilationInfo
+  /** Error severity type (error, warning, info), if available */
+  type?: string;
 }
 
 // Define error detection patterns for reuse
@@ -24,12 +31,31 @@ const COMPILATION_ERROR_PATTERNS = [
   'Invalid'
 ] as const;
 
-// Generic helper function to check if text contains any pattern from an array
+/**
+ * Checks if a text string contains any of the specified patterns.
+ *
+ * @param text - Text to search within
+ * @param patterns - Array of patterns to search for
+ * @returns True if any pattern is found in the text
+ */
 function containsPattern(text: string, patterns: readonly string[]): boolean {
   return patterns.some(pattern => text.includes(pattern));
 }
 
-// Get the number of lines in the injected header for line offset calculations
+/**
+ * Calculates the line offset needed to adjust error line numbers from injected shader headers.
+ *
+ * When WGSL shaders are compiled, additional header code is injected at the top.
+ * Error line numbers from the compiler need to be adjusted to match the original user code.
+ *
+ * @param usesTextures - Whether the shader uses texture bindings (affects header size)
+ * @returns Number of lines to subtract from compiler error line numbers
+ *
+ * @remarks
+ * - With textures: 13 lines (includes uniform bindings for iChannel0-3, iTime, etc.)
+ * - Without textures: 5 lines (minimal header with just iTime and iResolution)
+ * - Values determined empirically by analyzing WebGPU compiler output
+ */
 export function getHeaderLineOffset(usesTextures: boolean = true): number {
   if (usesTextures) {
     // Empirically determined: WebGPU error line numbers need to be adjusted by 13
@@ -42,6 +68,21 @@ export function getHeaderLineOffset(usesTextures: boolean = true): number {
   }
 }
 
+/**
+ * Parses and analyzes WGSL shader code to determine its type and entry points.
+ *
+ * Uses wgsl_reflect to inspect the shader and determine what kind of shader it is
+ * (fragment-only, vertex+fragment, compute, etc.) and validate its structure.
+ *
+ * @param wgslCode - WGSL shader source code to analyze
+ * @returns Object describing the shader type, entry points, validity, and any warnings/errors
+ *
+ * @remarks
+ * - Fragment-only shaders are the most common case for this application
+ * - Vertex+fragment shaders are used when custom geometry is provided
+ * - Compute shaders are currently unsupported
+ * - Invalid shaders return error information for debugging
+ */
 export function parseWGSL(wgslCode: string) {
   try {
     const reflect = new WgslReflect(wgslCode);
@@ -78,7 +119,22 @@ export function parseWGSL(wgslCode: string) {
   }
 }
 
-// Parse error messages (WGSL parser errors) into structured error objects
+/**
+ * Parses error messages from WGSL compilation and converts them to structured error objects.
+ *
+ * Handles various error message formats from different parts of the WebGPU pipeline
+ * and adjusts line numbers to account for injected shader headers.
+ *
+ * @param errorMessage - Raw error message string from WebGPU compiler or parser
+ * @param headerLineOffset - Number of lines to subtract from error line numbers to account for injected headers
+ * @returns Array of structured error objects with adjusted line numbers
+ *
+ * @remarks
+ * - Filters out success messages and non-error information
+ * - Supports multiple error message formats from different WebGPU implementations
+ * - Line number adjustment is critical for accurate error reporting in the editor
+ * - Returns empty array for non-error messages (success, info, etc.)
+ */
 export function parseErrorMessages(errorMessage: string, headerLineOffset: number = 0): ParsedError[] {
   const errors: ParsedError[] = [];
 
@@ -271,7 +327,15 @@ export function parseErrorMessages(errorMessage: string, headerLineOffset: numbe
   return errors;
 }
 
-// Clean up error messages by removing redundant information
+/**
+ * Cleans up error messages by removing redundant information and formatting artifacts.
+ *
+ * Removes compiler-specific prefixes, line/column references that are handled separately,
+ * and other noise that makes error messages less readable to users.
+ *
+ * @param message - Raw error message from compiler
+ * @returns Cleaned, user-friendly error message
+ */
 function cleanErrorMessage(message: string): string {
   return message
     // Remove informational prefixes that appear before errors

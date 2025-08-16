@@ -44,26 +44,48 @@ v-for="(error, index) in structuredErrors" :key="index"
 </template>
 
 <script setup lang="ts">
+/**
+ * ConsolePanel Component
+ *
+ * Displays shader compilation output and structured error information.
+ * Provides two types of output:
+ * - Manual output messages (compilation success, info logs)
+ * - Structured errors from WebGPU with clickable line navigation
+ *
+ * Errors are displayed with severity badges and clickable line numbers
+ * that allow users to jump directly to problematic code in the editor.
+ */
+
 import { computed } from 'vue';
 
 const props = defineProps<{
+  /** Raw console output text from shader compilation */
   consoleOutput: string;
+  /** Current shader code (currently unused, reserved for future features) */
   shaderCode?: string;
+  /** Structured error objects from WebGPU compilation with location data */
   structuredErrors?: Array<{
+    /** Human-readable error message */
     message: string;
+    /** Line number where error occurred */
     line: number;
+    /** Column number where error occurred */
     column: number;
+    /** Error severity (error, warning, info) */
     type: string;
+    /** Character offset in source code */
     offset: number;
+    /** Length of problematic code section */
     length: number;
   }>;
 }>();
 
 const emit = defineEmits<{
+  /** Request to navigate editor to specific line/column */
   'go-to-line': [line: number, column?: number]
 }>()
 
-// Use structured errors from WebGPU's GPUCompilationInfo
+/** Computed property that safely accesses structured errors with fallback */
 const structuredErrors = computed(() => {
   return props.structuredErrors || [];
 });

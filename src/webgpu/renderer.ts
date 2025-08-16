@@ -1,3 +1,15 @@
+/**
+ * WebGPU Shader Renderer
+ *
+ * Core rendering engine that compiles and executes WGSL shaders with WebGPU.
+ * Manages the complete rendering pipeline including:
+ * - Shader compilation with header injection
+ * - Texture binding and uniform buffer management
+ * - Vertex buffer setup for custom geometry
+ * - Render loop with time and resolution uniforms
+ * - Comprehensive error handling and reporting
+ */
+
 import { parseWGSL, parseErrorMessages } from './parser';
 import { loadDefaultTexture, usesAnyTextures } from './textures';
 import { getWebGPUDevice, configureCanvasContext } from './context';
@@ -5,10 +17,17 @@ import { fullscreenVertexWGSL, injectedHeader, minimalHeader, compileShaderModul
 import { createUniforms } from './uniforms';
 import { createPipeline } from './pipeline';
 
+/** Current animation frame ID for render loop cancellation */
 let currentFrameId: number | null = null;
+/** Current cleanup function for resource disposal */
 let currentCleanup: (() => void) | null = null;
 
-// Cancel any active render loop
+/**
+ * Cancels any active render loop and cleans up resources.
+ *
+ * Should be called before starting a new render to prevent
+ * multiple render loops running simultaneously.
+ */
 export function cancelCurrentRenderLoop() {
   if (currentFrameId !== null) {
     cancelAnimationFrame(currentFrameId);
@@ -22,6 +41,17 @@ export function cancelCurrentRenderLoop() {
   }
 }
 
+/**
+ * Executes a single render pass with the provided pipeline and resources.
+ *
+ * @param device - WebGPU device for command encoding
+ * @param context - Canvas context for rendering target
+ * @param pipeline - Compiled render pipeline
+ * @param bindGroup - Resource bindings (textures, uniforms)
+ * @param timeBuffer - Buffer containing time uniform data
+ * @param vertexBuffer - Optional vertex buffer for custom geometry
+ * @param vertexCount - Number of vertices to render (if using vertex buffer)
+ */
 function runRenderPass(
   device: GPUDevice,
   context: GPUCanvasContext,
@@ -60,7 +90,26 @@ function runRenderPass(
   device.queue.submit([encoder.finish()]);
 }
 
-// TODO: check where we are logging direct to console versus output()
+/**
+ * Initializes WebGPU and starts rendering the provided shader code.
+ *
+ * This is the main entry point for shader compilation and rendering.
+ * Handles the complete pipeline from shader compilation to render loop setup.
+ *
+ * @param canvas - HTML canvas element to render to
+ * @param shaderCode - WGSL fragment shader source code
+ * @param selectedTextures - Texture URLs mapped to iChannel slots
+ * @param onConsoleOutput - Optional callback for compilation/runtime messages
+ * @param onStructuredErrors - Optional callback for detailed error information
+ * @param vertexData - Optional vertex buffer data for custom geometry
+ *
+ * @remarks
+ * - Automatically cancels any previous render loop
+ * - Injects appropriate headers based on texture usage
+ * - Sets up continuous render loop with time and resolution uniforms
+ * - Handles canvas resizing automatically
+ * - Reports errors through both console and structured error callbacks
+ */
 export async function initWebGPU(
   canvas: HTMLCanvasElement,
   shaderCode: string,

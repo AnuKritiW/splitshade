@@ -1,3 +1,16 @@
+/**
+ * WebGPU Shader Management and Compilation
+ *
+ * This module provides shader templates, compilation utilities, and error handling
+ * for WebGPU WGSL shaders in the shader playground environment.
+ */
+
+/**
+ * Fullscreen triangle vertex shader for fragment shader development.
+ *
+ * Creates a triangle that covers the entire screen using only vertex indices.
+ * No vertex buffers required - positions generated procedurally.
+ */
 export const fullscreenVertexWGSL = `
 @vertex
 fn main(@builtin(vertex_index) vertexIndex : u32) -> @builtin(position) vec4<f32> {
@@ -10,12 +23,24 @@ fn main(@builtin(vertex_index) vertexIndex : u32) -> @builtin(position) vec4<f32
 }
 `;
 
+/**
+ * Minimal uniform header for basic fragment shaders.
+ *
+ * Provides essential uniforms: resolution, time, and mouse coordinates.
+ * Used when no texture channels are required.
+ */
 export const minimalHeader = `
 @group(0) @binding(0) var<uniform> iResolution: vec3<f32>;
 @group(0) @binding(1) var<uniform> iTime: f32;
 @group(0) @binding(2) var<uniform> iMouse: vec4<f32>;
 `;
 
+/**
+ * Texture binding declarations for all four iChannel slots.
+ *
+ * Defines texture and sampler bindings for iChannel0-3 compatibility.
+ * Each channel requires both a texture and sampler binding.
+ */
 const textureBindings = `
 @group(0) @binding(3) var iChannel0: texture_2d<f32>;
 @group(0) @binding(4) var iChannel0Sampler: sampler;
@@ -27,10 +52,21 @@ const textureBindings = `
 @group(0) @binding(10) var iChannel3Sampler: sampler;
 `;
 
+/**
+ * Complete header with uniforms and texture bindings.
+ *
+ * Combines minimal header with all texture channel declarations.
+ * Injected automatically when textures are detected in shader code.
+ */
 export const injectedHeader = minimalHeader + textureBindings;
 
+/**
+ * Result structure for shader compilation operations.
+ */
 export interface CompilationResult {
+  /** Compiled shader module (null if compilation failed) */
   module: GPUShaderModule | null;
+  /** Detailed error information with adjusted line numbers */
   errors: Array<{
     message: string;
     line: number;
@@ -39,9 +75,27 @@ export interface CompilationResult {
     offset: number;
     length: number;
   }>;
+  /** Whether compilation encountered any errors */
   hasErrors: boolean;
 }
 
+/**
+ * Compiles WGSL shader code into a WebGPU shader module.
+ *
+ * Handles compilation, error collection, and line number adjustment
+ * to account for injected headers in user shader code.
+ *
+ * @param device - WebGPU device instance
+ * @param code - Complete WGSL shader source including headers
+ *
+ * @returns Promise resolving to compilation result with module and errors
+ *
+ * @remarks
+ * - Automatically adjusts error line numbers to match user code
+ * - Provides detailed diagnostic information for debugging
+ * - Returns null module if compilation fails with errors
+ * - Logs comprehensive compilation messages to console for development
+ */
 export async function compileShaderModule(device: GPUDevice, code: string): Promise<CompilationResult> {
   const module = device.createShaderModule({ code });
 

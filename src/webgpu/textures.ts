@@ -1,11 +1,16 @@
 /**
- * loadDefaultTexture loads a default texture and sampler for use in WebGPU shaders.
- * It fetches an image, converts it to a GPU texture, and creates a sampler.
- * 
- * A texture holds pixel data (like an image)
- * A sampler defines how that texture is accessed (filtering, wrapping, etc)
+ * WebGPU Texture Loading and Management
+ *
+ * This module handles texture creation, loading, and management for WebGPU shaders.
+ * Provides utilities for loading default textures and checking shader texture usage.
  */
 
+/**
+ * Default texture catalog available in the shader playground.
+ *
+ * Collection of pre-loaded textures including abstract patterns,
+ * photographic content, and utility textures for shader development.
+ */
 export const DEFAULT_TEXTURES = [
   { name: 'Abstract 1', path: '/splitshade/textures/abstract1.jpg' }, // public/ path
   { name: 'Abstract 2', path: '/splitshade/textures/abstract2.jpg' },
@@ -31,18 +36,42 @@ export const DEFAULT_TEXTURES = [
   { name: 'wood', path: '/splitshade/textures/wood.jpg' },
 ]
 
-// check if shader uses any texture channels at all
+/**
+ * Checks if a shader uses any texture channels (iChannel0-3).
+ *
+ * Analyzes WGSL shader code to determine if texture bindings are required.
+ * Used to optimize uniform buffer creation and binding setup.
+ *
+ * @param shaderCode - WGSL fragment shader source code
+ * @returns True if shader references any iChannel variables
+ */
 export function usesAnyTextures(shaderCode: string | undefined | null): boolean {
   if (!shaderCode || shaderCode.trim() === '') return false;
   return /\biChannel[0-3]\b/.test(shaderCode);
 }
 
+/**
+ * Loads and prepares a texture for WebGPU shader usage.
+ *
+ * Downloads an image, converts it to GPU-optimized format, and creates
+ * the necessary texture view and sampler for shader binding.
+ *
+ * @param device - WebGPU device instance
+ * @param src - Image source URL or path
+ *
+ * @returns Promise resolving to texture view and sampler pair
+ *
+ * @remarks
+ * - Texture format: rgba8unorm-srgb for standard color images
+ * - Sampler configuration: linear filtering with repeat addressing
+ * - Usage flags: TEXTURE_BINDING | COPY_DST | RENDER_ATTACHMENT
+ * - Automatically handles image decoding and bitmap conversion
+ */
 export async function loadDefaultTexture(device: GPUDevice, src: string): Promise<{
   textureView: GPUTextureView;
   sampler: GPUSampler;
 }> {
   const img = new Image();
-  // TODO: use a more robust path resolution method, e.g. import.meta.url or a relative path
   img.src = src;
   await img.decode();
 
