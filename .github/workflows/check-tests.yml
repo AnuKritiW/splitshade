@@ -37,8 +37,9 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
-        project: [backend, frontend]
+        shard: ['1/2','2/2']
 
     steps:
       - name: Checkout repo
@@ -53,10 +54,5 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run ${{ matrix.project }} tests
-        run: |
-          if [ "${{ matrix.project }}" = "backend" ]; then
-            npx vitest run tests/backend
-          else
-            npx vitest run tests/frontend
-          fi
+      - name: Run unit tests (shard ${{ matrix.shard }})
+        run: npx vitest run tests --shard ${{ matrix.shard }}
