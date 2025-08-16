@@ -4,17 +4,24 @@ skinparam componentStyle rectangle
 
 title WebGPU Pipeline Architecture - Splitshade
 
-package "Core WebGPU Modules" {
+package "Core & Runtime" {
   [context.ts] as Context
   [renderer.ts] as Renderer
+}
+
+package "Shader Processing" {
   [wgslReflect.ts] as Parser
+  [shaderUtils.ts] as Shaders
 }
 
 package "Pipeline Components" {
-  [shaderUtils.ts] as Shaders
   [uniforms.ts] as Uniforms
-  [textures.ts] as Textures
   [pipeline.ts] as Pipeline
+}
+
+package "Resource Management" {
+  [textures.ts] as Textures
+  [objParser.ts] as ObjParser
 }
 
 package "WebGPU Resources" {
