@@ -1,158 +1,154 @@
-# SplitShade - a browser-based WebGPU Playground
+# SplitShade WebGPU Playground
 
-This project is a work in progress. For now, I am storing some notes on my README as I go along.
+[![Deploy to GitHub Pages](https://github.com/AnuKritiW/splitshade-webgpu-playground/actions/workflows/deploy.yml/badge.svg)](https://github.com/AnuKritiW/splitshade-webgpu-playground/actions/workflows/deploy.yml)
+[![Check Vite Build](https://github.com/AnuKritiW/splitshade-webgpu-playground/actions/workflows/check-build.yml/badge.svg)](https://github.com/AnuKritiW/splitshade-webgpu-playground/actions/workflows/check-build.yml)
+[![Run Unit Tests](https://github.com/AnuKritiW/splitshade-webgpu-playground/actions/workflows/check-tests.yml/badge.svg)](https://github.com/AnuKritiW/splitshade-webgpu-playground/actions/workflows/check-tests.yml)
 
-## Developer Notes
+![Vue.js](https://img.shields.io/badge/Vue.js-4FC08D?style=for-the-badge&logo=vue.js&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
+![WebGPU](https://img.shields.io/badge/WebGPU-FF6B35?style=for-the-badge&logo=webgl&logoColor=white)
+![WGSL](https://img.shields.io/badge/WGSL-FF4B4B?style=for-the-badge&logo=shader&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![Monaco Editor](https://img.shields.io/badge/Monaco_Editor-0078D4?style=for-the-badge&logo=visual-studio-code&logoColor=white)
+![Vitest](https://img.shields.io/badge/Vitest-6E9F18?style=for-the-badge&logo=vitest&logoColor=white)
 
-This version of the playground enforces a ShaderToy-style execution model:
-- Only fragment shaders are accepted from user input.
-- A hardcoded fullscreen vertex shader is injected automatically at runtime.
-- Fragment shaders are compiled and run over the entire canvas using a triangle covering the full screen.
-- Vertex and compute entry points are still detected (via `wgsl_reflect`), but are ignored and warned about in the console.
+A powerful, interactive WebGPU shader playground built with Vue.js and TypeScript. Write, test, and experiment with WGSL shaders in real-time with an intuitive web-based IDE.
 
-This setup ensures that users can write fragment shaders without having to define vertex logic or pipeline configuration.
+## [Live Demo](https://anukritiw.github.io/splitshade/)
 
-### Injected Uniforms
+## Features
 
-The following uniforms are automatically injected and available to fragment shaders:
+- **Real-time Shader Preview** - See your WGSL shaders render instantly
+- **Monaco Editor Integration** - Full-featured code editor with syntax highlighting
+- **Texture Loading** - Import and apply custom textures to your shaders
+- **Multiple Mesh Support** - Test shaders on various 3D models
+- **Interactive Controls** - Real-time uniform manipulation
+- **Responsive Design** - Works seamlessly across devices
+- **Comprehensive Testing** - Test coverage with Vitest
 
-- `iResolution: vec3<f32>`  
-  - Canvas resolution in pixels: (width, height, 1.0)
+## Architecture
 
-- `iTime: f32`  
-  - Seconds since the render loop began
+The project follows a modular architecture with clear separation of concerns:
 
-- `iMouse: vec4<f32>`  
-  - Mouse position in pixels (`x`, `y`), click state (`z` = 1.0 when down, 0.0 otherwise), and padding (`w` = 0.0)
+- **Frontend**: Vue 3 with Composition API and TypeScript
+- **WebGPU Engine**: Custom renderer with pipeline management
+- **Shader System**: WGSL parsing and uniform binding
+- **Resource Management**: Texture and mesh loading utilities
+- **Testing**: Comprehensive unit tests
 
-- `iChannel0-3`
-- `iChannel0-3Sampler`
+## Technologies
 
-### Texture + Sampler Support
+| Category | Technologies |
+|----------|-------------|
+| **Frontend** | Vue.js 3, TypeScript, Naive UI |
+| **Graphics** | WebGPU, WGSL Shaders |
+| **Build Tools** | Vite, Vue TSC |
+| **Code Editor** | Monaco Editor |
+| **Testing** | Vitest, Testing Library |
+| **Deployment** | GitHub Pages, GitHub Actions |
 
-This phase adds support for rendering with an external image using `textureSample()` in fragment shaders. The image is loaded at runtime and passed to the shader via a bind group containing both a **texture view** and a **sampler**.
+## Prerequisites
 
-- The image is placed in `public/textures/` and served via the Vite base URL (`/splitshade/`).
-- A `GPUTexture` is created from the decoded image bitmap.
-- A `GPUTextureView` and `GPUSampler` are then created and added to the shader’s bind group at bindings `@binding(3)` and `@binding(4)`, respectively.
+- **Node.js** 18+ 
+- **Modern Browser** with WebGPU support (Chrome 113+, Firefox 120+)
+- **GPU** compatible with WebGPU
 
-### Shader Examples
+## Installation
 
-- `whiteCircle-resolutionTest.wgsl`: Uses `iResolution`
-- `pulsingColours-timeTest.wgsl`: Uses `iTime`
-- `mousePointerTest.wgsl`: Uses `iMouse`
-- `defaultTex.wgsl`: Uses `iChannel0` abd `iChannel0Sampler`
+```bash
+# Clone the repository
+git clone https://github.com/AnuKritiW/splitshade-webgpu-playground.git
 
-### Sampler Types (KIV)
+# Navigate to project directory
+cd splitshade-webgpu-playground
 
-Currently, all injected samplers (e.g., iChannel0Sampler) are created as filtering samplers, which allow interpolated sampling via textureSample(). This matches the typical behavior expected in ShaderToy-style fragment shaders.
+# Install dependencies
+npm install
 
-In the future, other sampler types could be supported like:
-- sampler (non-filtering) — for manual mip-level control or compute shaders.
-- sampler_comparison — for depth texture sampling (e.g., shadows).
-
-# Vertex Shader support
-
-```
-// --- Vertex Shader Guide ---
-//
-// If you've uploaded a mesh (.obj), your vertex shader can access its data:
-//
-// Available vertex inputs:
-// - @location(0) position: vec3<f32>   // 3D position from the mesh
-// - @location(1) color: vec3<f32>      // Default white if not provided in .obj
-//
-// You must declare these as parameters to your vertex function, e.g.:
-//
-// @vertex
-// fn main(
-//   @location(0) position: vec3<f32>,
-//   @location(1) color: vec3<f32>
-// ) -> @builtin(position) vec4<f32> {
-//   return vec4<f32>(position, 1.0);
-// }
-//
-// If no mesh is uploaded, fallback fullscreen triangle will render instead.
+# Start development server
+npm run dev
 ```
 
-feat: add optional mesh upload support with vertex buffer integration
-- Accepts .obj mesh uploads and parses into GPU vertex buffers
-- Automatically switches pipeline to use vertex input when mesh is present
-- Adds default mesh-compatible shader code if no code is present
-- Preserves fallback fullscreen triangle rendering when no mesh is uploaded
-- Handles iChannel texture bindings dynamically
-- Includes error handling and fallback logging
+## Usage
+
+1. **Start the development server** with `npm run dev`
+2. **Open your browser** to `http://localhost:5173`
+3. **Write WGSL shaders** in the Monaco editor
+4. **Select meshes and textures** from the resource panels
+5. **Watch your creations** render in real-time!
+
 
 ## Testing
 
-### front end
+```bash
+# Run all tests
+npm test
 
-#### What to Test
+# Run tests with coverage
+npm run test:coverage
+```
 
-| Area                    | Examples                                                                 |
-|-------------------------|--------------------------------------------------------------------------|
-| Render logic            | Are key elements (images, modals, buttons) visible based on props/state? |
-| Event handling          | Does clicking, uploading, or typing emit the right event?                |
-| Conditional visibility  | Is content shown/hidden based on `v-if`, `v-show`, `v-model`, etc.?      |
-| Component communication | Are `emit` and `v-model` working as intended?                            |
+## Deployment
+
+The project automatically deploys to GitHub Pages when changes are pushed to the main branch.
+
+```bash
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+
+# Manual deployment
+npm run deploy
+```
+
+## Project Structure
+
+```
+src/
+├── components/             # Vue components
+│   ├── EditorPanel.vue     # Monaco shader editor
+│   ├── PreviewPanel.vue    # WebGPU render canvas
+│   ├── ResourcesPanel.vue  # Mesh/texture selector
+│   └── ...
+├── webgpu/                 # WebGPU engine
+│   ├── renderer.ts         # Main renderer
+│   ├── pipeline.ts         # Render pipeline
+│   ├── shaders.ts          # Shader compilation
+│   └── ...
+├── composables/            # Vue composables
+├── shaders/                # Example WGSL shaders
+├── utils/                  # Utility functions
+└── styles/                 # Global styles
+```
+
+## Contributing
+
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
+3. **Commit** your changes (`git commit -m 'Add amazing feature'`)
+4. **Push** to the branch (`git push origin feature/amazing-feature`)
+5. **Open** a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- **WebGPU Working Group** for the amazing graphics API
+- **Monaco Editor** team for the excellent code editor
+- **Vue.js** community for the fantastic framework
+- **Vite** team for the blazing fast build tool
+
+## Links
+
+- [Live Demo](https://anukritiw.github.io/splitshade/)
+- [Documentation](https://anukritiw.github.io/splitshade-docs/)
 
 ---
 
-#### Testing Strategy
-
-1. Use `mountWithGlobalStubs`
-
-Use custom utility to mount with global Naive UI stubs and avoid real rendering.
-
-```ts
-const wrapper = mountWithGlobalStubs(MyComponent, {
-  props: { ... },
-})
-```
-
-2. Stub Naive UI Components
-
-Stub smart:
-
-- Modal-like components must **respect `v-model`** and expose content conditionally.
-
-Example for `<n-modal>`:
-
-```ts
-'n-modal': {
-  props: ['modelValue'],
-  emits: ['update:modelValue'],
-  template: `<div v-if="modelValue"><slot /></div>`
-}
-```
-
-3. Emit Testing
-
-If component emits:
-
-- Events: use `wrapper.vm.$emit(...)`
-- Props: trigger user actions and check `wrapper.emitted('event')`
-
-4. Test HTML Output Sparingly
-
-- Prefer `findAll()`, `text()`, or `trigger()` over asserting raw `.html()` strings.
-- Use `.html()` only when diagnosing missing content or debugging teleport issues.
-
-5. Teleporting Components
-
-Components like `<n-modal>` use Vue’s `<teleport>`. In tests:
-
-- Content won’t be in the wrapper tree unless teleportation is stubbed or disabled.
-
-**Solution:** Stub modal to keep children in-tree using `v-if` in the stub template (see above).
-
-
-# Sources/References
-
-- https://shadertoyunofficial.wordpress.com/2019/07/23/shadertoy-media-files/
-- https://surma.dev/things/webgpu/#textures
-- https://developer.mozilla.org/en-US/docs/Web/API/GPUDevice/createTexture
-- https://developer.mozilla.org/en-US/docs/Web/API/GPUDevice/createSampler
-- https://www.naiveui.com/en-US/os-theme/docs/introduction
-- https://web.mit.edu/djwendel/www/weblogo/shapes/basic-shapes/sphere/sphere.obj
-- <a href="https://www.flaticon.com/free-icons/shadow" title="shadow icons">Shadow icons created by Ian Anandara - Flaticon</a>
+<div align="center">
+  Made with ❤️ by <a href="https://github.com/AnuKritiW">AnuKritiW</a>
+</div>
