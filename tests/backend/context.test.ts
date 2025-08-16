@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { getWebGPUDevice, configureCanvasContext } from '@/webgpu/context'
+import { getWebGPUDevice, configureCanvasContext } from '@/core/context'
 
 function mockNavigatorGpu(mockGpu: Partial<GPU> | undefined) {
   Object.defineProperty(navigator, 'gpu', {
@@ -95,7 +95,7 @@ describe('getWebGPUDevice failure cases', () => {
       getPreferredCanvasFormat: vi.fn(),
     })
 
-    const { getWebGPUDevice } = await import('@/webgpu/context')
+    const { getWebGPUDevice } = await import('@/core/context')
     const { device, adapter } = await getWebGPUDevice()
     expect(device).toBeNull()
     expect(adapter).toBeNull()
@@ -111,7 +111,7 @@ describe('getWebGPUDevice failure cases', () => {
       getPreferredCanvasFormat: vi.fn(),
     })
 
-    const { getWebGPUDevice } = await import('@/webgpu/context')
+    const { getWebGPUDevice } = await import('@/core/context')
     const { device, adapter } = await getWebGPUDevice()
     expect(device).toBeNull()
     expect(adapter).toBeNull()

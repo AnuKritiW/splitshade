@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseObjToVertices } from '@/utils/objParser'
+import { parseObjToVertices } from '@/resources/mesh/objParser'
 
 describe('parseObjToVertices', () => {
   it('parses a valid triangle .obj string into interleaved position and color Float32Array', () => {

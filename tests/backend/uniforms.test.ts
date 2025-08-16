@@ -1,4 +1,4 @@
-import { createUniforms } from '@/webgpu/uniforms';
+import { createUniforms } from '@/pipeline/uniforms';
 
 describe('createUniforms', () => {
   let mockDevice: GPUDevice;

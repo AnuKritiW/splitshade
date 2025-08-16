@@ -1,4 +1,4 @@
-import { loadDefaultTexture } from '@/webgpu/textures';
+import { loadDefaultTexture } from '@/resources/textures';
 
 // image -- decoded --> ImageBitmap -- uploaded to GPU --> GPUTexture
 

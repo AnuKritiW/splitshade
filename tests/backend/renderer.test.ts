@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { initWebGPU } from '@/webgpu/renderer';
-import * as context from '@/webgpu/context';
-import * as parser from '@/webgpu/parser';
-import * as shaders from '@/webgpu/shaderUtils';
-import * as uniforms from '@/webgpu/uniforms';
-import * as textures from '@/webgpu/textures';
-import { fullscreenVertexWGSL } from '@/webgpu/shaderUtils';
+import { initWebGPU } from '@/runtime/renderer';
+import * as context from '@/core/context';
+import * as parser from '@/shader/wgslReflect';
+import * as shaders from '@/shader/shaderUtils';
+import * as uniforms from '@/pipeline/uniforms';
+import * as textures from '@/resources/textures';
+import { fullscreenVertexWGSL } from '@/shader/shaderUtils';
 
 describe('renderer.ts', () => {
   const mockCanvas = {

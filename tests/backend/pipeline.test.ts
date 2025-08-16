@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { createPipeline } from '@/webgpu/pipeline'
+import { createPipeline } from '@/pipeline/pipeline'
 
 describe('createPipeline', () => {
   const mockCreateRenderPipeline = vi.fn()

@@ -2,11 +2,11 @@ import { useShaderRunner } from '@/ui/composables/useShaderRunner'
 import { vi } from 'vitest'
 
 // Mock initWebGPU
-vi.mock('@/webgpu/renderer', () => ({
+vi.mock('@/runtime/renderer', () => ({
   initWebGPU: vi.fn()
 }))
 
-import { initWebGPU } from '@/webgpu/renderer'
+import { initWebGPU } from '@/runtime/renderer'
 
 describe('useShaderRunner', () => {
   beforeEach(() => {
