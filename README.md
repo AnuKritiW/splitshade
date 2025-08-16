@@ -16,6 +16,12 @@ A powerful, interactive WebGPU shader playground built with Vue.js and TypeScrip
 
 ## [Live Demo](https://anukritiw.github.io/splitshade/)
 
+<div align="center">
+  <a href="https://anukritiw.github.io/splitshade/">
+    <img src="assets/splitshade.png" alt="splitshade screenshot">
+  </a>
+</div>
+
 ## Features
 
 - **Real-time Shader Preview** - See your WGSL shaders render instantly
