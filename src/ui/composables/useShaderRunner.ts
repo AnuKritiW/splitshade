@@ -1,4 +1,4 @@
-import { initWebGPU } from '../../runtime/renderer'
+import { initWebGPU } from '@/runtime/renderer'
 
 type ChannelMap = {
   iChannel0: string | null

@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue'
-import { DEFAULT_TEXTURES } from '../../resources/textures'
+import { DEFAULT_TEXTURES } from '@/resources/textures'
 
 /**
  * Vue composable for managing texture inputs in the shader editor.

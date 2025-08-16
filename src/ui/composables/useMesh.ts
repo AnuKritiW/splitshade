@@ -1,5 +1,5 @@
 import { ref, reactive } from 'vue'
-import { parseObjToVertices } from '../../resources/mesh/objParser'
+import { parseObjToVertices } from '@/resources/mesh/objParser'
 
 /**
  * Vue composable for managing 3D mesh uploads and preset meshes.
