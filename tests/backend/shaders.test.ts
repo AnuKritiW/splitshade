@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { fullscreenVertexWGSL, injectedHeader, compileShaderModule } from '@/webgpu/shaders'
+import { fullscreenVertexWGSL, injectedHeader, compileShaderModule } from '@/webgpu/shaderUtils'
 
 describe('shaders module', () => {
   it('defines fullscreenVertexWGSL with expected contents', () => {

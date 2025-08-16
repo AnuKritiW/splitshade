@@ -13,7 +13,7 @@
 import { parseWGSL, parseErrorMessages } from './parser';
 import { loadDefaultTexture, usesAnyTextures } from './textures';
 import { getWebGPUDevice, configureCanvasContext } from './context';
-import { fullscreenVertexWGSL, injectedHeader, minimalHeader, compileShaderModule } from './shaders';
+import { fullscreenVertexWGSL, injectedHeader, minimalHeader, compileShaderModule } from './shaderUtils';
 import { createUniforms } from './uniforms';
 import { createPipeline } from './pipeline';
 
