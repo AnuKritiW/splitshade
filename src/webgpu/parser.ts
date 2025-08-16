@@ -3,7 +3,7 @@ import { WgslReflect } from 'wgsl_reflect';
 /**
  * Represents a parsed WGSL compilation error with location information.
  */
-export interface ParsedError {
+interface ParsedError {
   /** Human-readable error message */
   message: string;
   /** Line number where the error occurred (1-based) */
@@ -42,31 +42,7 @@ function containsPattern(text: string, patterns: readonly string[]): boolean {
   return patterns.some(pattern => text.includes(pattern));
 }
 
-/**
- * Calculates the line offset needed to adjust error line numbers from injected shader headers.
- *
- * When WGSL shaders are compiled, additional header code is injected at the top.
- * Error line numbers from the compiler need to be adjusted to match the original user code.
- *
- * @param usesTextures - Whether the shader uses texture bindings (affects header size)
- * @returns Number of lines to subtract from compiler error line numbers
- *
- * @remarks
- * - With textures: 13 lines (includes uniform bindings for iChannel0-3, iTime, etc.)
- * - Without textures: 5 lines (minimal header with just iTime and iResolution)
- * - Values determined empirically by analyzing WebGPU compiler output
- */
-export function getHeaderLineOffset(usesTextures: boolean = true): number {
-  if (usesTextures) {
-    // Empirically determined: WebGPU error line numbers need to be adjusted by 13
-    // This accounts for injectedHeader template literal structure (leading newline + 11 declarations + trailing newline = 13 lines)
-    return 13;
-  } else {
-    // Minimal header without textures: empirically determined to be 5 lines
-    // This accounts for minimalHeader template literal structure (leading newline + 3 declarations + trailing newline = 5 lines)
-    return 5;
-  }
-}
+
 
 /**
  * Parses and analyzes WGSL shader code to determine its type and entry points.

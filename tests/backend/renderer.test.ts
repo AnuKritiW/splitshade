@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { initWebGPU, cancelCurrentRenderLoop } from '@/webgpu/renderer';
+import { initWebGPU } from '@/webgpu/renderer';
 import * as context from '@/webgpu/context';
 import * as parser from '@/webgpu/parser';
 import * as shaders from '@/webgpu/shaders';
@@ -204,23 +204,5 @@ describe('renderer.ts', () => {
     }, vi.fn());
 
     expect(errorSpy).toHaveBeenCalledWith('No entry points found in shader code.');
-  });
-
-  // cancelCurrentRenderLoop test
-  // TODO: consider exposing cancelCurrentRenderLoop to user
-  it('should cancel render loop with cancelCurrentRenderLoop()', async () => {
-    const cancelSpy = vi.fn();
-    vi.stubGlobal('cancelAnimationFrame', cancelSpy);
-
-    await initWebGPU(mockCanvas, 'valid shader', {
-      iChannel0: 'image.png',
-      iChannel1: null,
-      iChannel2: null,
-      iChannel3: null,
-    }, vi.fn());
-
-    cancelCurrentRenderLoop();
-
-    expect(cancelSpy).toHaveBeenCalled();
   });
 });

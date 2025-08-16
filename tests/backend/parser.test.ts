@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseWGSL, parseErrorMessages, getHeaderLineOffset } from '@/webgpu/parser'
+import { parseWGSL, parseErrorMessages } from '@/webgpu/parser'
 
 // Minimal valid fragment shader
 const validFragmentOnly = `
@@ -65,16 +65,6 @@ describe('parseWGSL', () => {
     expect(result.valid).toBe(false)
     expect(result.type).toBe('error')
     expect(result.error).toBeDefined() // an error message is present
-  })
-})
-
-describe('getHeaderLineOffset', () => {
-  it('returns 13 when textures are used (default)', () => {
-    expect(getHeaderLineOffset()).toBe(13)
-    expect(getHeaderLineOffset(true)).toBe(13)
-  })
-  it('returns 5 when textures are not used', () => {
-    expect(getHeaderLineOffset(false)).toBe(5)
   })
 })
 

@@ -63,7 +63,7 @@ export const injectedHeader = minimalHeader + textureBindings;
 /**
  * Result structure for shader compilation operations.
  */
-export interface CompilationResult {
+interface CompilationResult {
   /** Compiled shader module (null if compilation failed) */
   module: GPUShaderModule | null;
   /** Detailed error information with adjusted line numbers */

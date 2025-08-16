@@ -23,12 +23,12 @@ let currentFrameId: number | null = null;
 let currentCleanup: (() => void) | null = null;
 
 /**
- * Cancels any active render loop and cleans up resources.
- *
- * Should be called before starting a new render to prevent
- * multiple render loops running simultaneously.
+ * Cancels the current render loop and performs cleanup.
+ * 
+ * Stops the active animation frame and executes any pending cleanup operations.
+ * Used internally to prevent multiple render loops from running simultaneously.
  */
-export function cancelCurrentRenderLoop() {
+function cancelCurrentRenderLoop() {
   if (currentFrameId !== null) {
     cancelAnimationFrame(currentFrameId);
     currentFrameId = null;
