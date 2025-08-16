@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import PreviewPanel from '@/ui/components/panels/PreviewPanel.vue'
-import { mountWithGlobalStubs } from '../utils/mountWithGlobalStubs'
+import { mountWithGlobalStubs } from '../../utils/mountWithGlobalStubs'
 
 describe('PreviewPanel.vue', () => {
   // Test: <canvas> element renders inside the component

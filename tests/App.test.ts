@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { defineComponent, h, ref, nextTick } from 'vue'
 
-import App from '../../src/App.vue'
+import App from '@/App.vue'
 
 // mock Naive UI components (minimal stubs so App renders)
 vi.mock('naive-ui', () => {
@@ -36,7 +36,7 @@ const uploadedMesh = { name: 'foo.obj', vertexData: new Float32Array([0, 1, 2]) 
 const presetMeshes = ref([{ name: 'teapot', path: '/mesh/teapot.obj' }])
 
 // create spy func to track when shaders are run
-vi.mock('../../src/ui/composables/useShaderRunner', () => ({
+vi.mock('@/ui/composables/useShaderRunner', () => ({
   useShaderRunner: () => ({
     runShader: (args: any) => {
       runShaderSpy(args)
@@ -47,7 +47,7 @@ vi.mock('../../src/ui/composables/useShaderRunner', () => ({
 }))
 
 // mock texture management with fake data
-vi.mock('../../src/ui/composables/useTextures', () => ({
+vi.mock('@/ui/composables/useTextures', () => ({
   useTextures: () => ({
     selectedTextures: selectedTexturesRef,
     allTextures: ref(['tex0.png', 'tex2.png']),
@@ -59,7 +59,7 @@ vi.mock('../../src/ui/composables/useTextures', () => ({
 }))
 
 // mock mesh management with fake data
-vi.mock('../../src/ui/composables/useMesh', () => ({
+vi.mock('@/ui/composables/useMesh', () => ({
   useMesh: () => ({
     showMeshModal: showMeshModalRef,
     uploadedMesh,
@@ -221,6 +221,7 @@ describe('App.vue', () => {
   it('auto-runs shader on mount and updates console via onLog', async () => {
     mountApp()
 
+    // TODO: revisit
     // onMounted --> nextTick --> handleRunShader
     await nextTick()
     await nextTick()

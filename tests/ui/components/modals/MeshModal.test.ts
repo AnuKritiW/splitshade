@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import MeshModal from '@/ui/components/modals/MeshModal.vue'
-import { mountModalWithStubs } from '../utils/mountWithGlobalStubs'
+import { mountModalWithStubs } from '../../utils/mountWithGlobalStubs'
 
 function mountMeshModal(customProps = {}) {
   return mountModalWithStubs(MeshModal, {
