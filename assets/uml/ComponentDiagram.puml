@@ -7,11 +7,11 @@ title WebGPU Pipeline Architecture - Splitshade
 package "Core WebGPU Modules" {
   [context.ts] as Context
   [renderer.ts] as Renderer
-  [parser.ts] as Parser
+  [wgslReflect.ts] as Parser
 }
 
 package "Pipeline Components" {
-  [shaders.ts] as Shaders
+  [shaderUtils.ts] as Shaders
   [uniforms.ts] as Uniforms
   [textures.ts] as Textures
   [pipeline.ts] as Pipeline
