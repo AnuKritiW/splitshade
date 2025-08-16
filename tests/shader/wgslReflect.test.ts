@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+
 import { parseWGSL, parseErrorMessages } from '@/shader/wgslReflect'
 
 // Minimal valid fragment shader

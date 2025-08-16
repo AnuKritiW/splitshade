@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
+
 import { fullscreenVertexWGSL, injectedHeader, compileShaderModule } from '@/shader/shaderUtils'
 
 describe('shaders module', () => {

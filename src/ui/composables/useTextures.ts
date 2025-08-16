@@ -1,4 +1,5 @@
 import { ref, computed } from 'vue'
+
 import { DEFAULT_TEXTURES } from '@/resources/textures'
 
 /**

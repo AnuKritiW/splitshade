@@ -39,9 +39,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onBeforeUnmount, nextTick } from 'vue'
 import { VueMonacoEditor } from '@guolao/vue-monaco-editor'
 import * as monaco from 'monaco-editor'
+import { ref, watch, onBeforeUnmount, nextTick } from 'vue'
 
 /**
  * Component props interface.

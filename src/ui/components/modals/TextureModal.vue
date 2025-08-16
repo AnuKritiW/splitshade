@@ -10,8 +10,8 @@
  */
 -->
 <script setup lang="ts">
-import { computed } from 'vue'
 import { NModal, NCard, NImage, NUpload, NButton } from 'naive-ui'
+import { computed } from 'vue'
 
 /**
  * Component props interface.

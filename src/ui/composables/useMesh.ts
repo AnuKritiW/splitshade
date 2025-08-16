@@ -1,4 +1,5 @@
 import { ref, reactive } from 'vue'
+
 import { parseObjToVertices } from '@/resources/mesh/objParser'
 
 /**

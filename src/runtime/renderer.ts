@@ -10,12 +10,12 @@
  * - Comprehensive error handling and reporting
  */
 
-import { parseWGSL, parseErrorMessages } from '@/shader/wgslReflect';
-import { loadDefaultTexture, usesAnyTextures } from '@/resources/textures';
 import { getWebGPUDevice, configureCanvasContext } from '@/core/context';
-import { fullscreenVertexWGSL, injectedHeader, minimalHeader, compileShaderModule } from '@/shader/shaderUtils';
-import { createUniforms } from '@/pipeline/uniforms';
 import { createPipeline } from '@/pipeline/pipeline';
+import { createUniforms } from '@/pipeline/uniforms';
+import { loadDefaultTexture, usesAnyTextures } from '@/resources/textures';
+import { fullscreenVertexWGSL, injectedHeader, minimalHeader, compileShaderModule } from '@/shader/shaderUtils';
+import { parseWGSL, parseErrorMessages } from '@/shader/wgslReflect';
 
 /** Current animation frame ID for render loop cancellation */
 let currentFrameId: number | null = null;

@@ -18,8 +18,20 @@
  * - Bottom-right: Console with compilation output and errors
  */
 
+import { loader } from '@guolao/vue-monaco-editor'
+import { LogoGithub } from '@vicons/ionicons5'
 import { darkTheme } from 'naive-ui'
 import { ref, nextTick } from 'vue'
+
+import ConsolePanel from './ui/components/panels/ConsolePanel.vue'
+import EditorPanel from './ui/components/panels/EditorPanel.vue'
+import PreviewPanel from './ui/components/panels/PreviewPanel.vue'
+import ResourcesPanel from './ui/components/panels/ResourcesPanel.vue'
+import WebGPUWarning from './ui/components/WebGPUWarning.vue'
+import { useMesh } from './ui/composables/useMesh'
+import { useShaderRunner } from './ui/composables/useShaderRunner'
+import { useTextures } from './ui/composables/useTextures'
+import './ui/styles/app.css'
 
 /** Default fragment shader code displayed on application startup */
 const DEFAULT_SHADER_CODE = `@fragment
@@ -43,19 +55,6 @@ function handleEditorReady() {
     handleRunShader()
   })
 }
-
-import { loader } from '@guolao/vue-monaco-editor'
-import { LogoGithub } from '@vicons/ionicons5'
-
-import { useShaderRunner } from './ui/composables/useShaderRunner'
-import ConsolePanel from './ui/components/panels/ConsolePanel.vue'
-import PreviewPanel from './ui/components/panels/PreviewPanel.vue'
-import EditorPanel from './ui/components/panels/EditorPanel.vue'
-import { useTextures } from './ui/composables/useTextures'
-import { useMesh } from './ui/composables/useMesh'
-import ResourcesPanel from './ui/components/panels/ResourcesPanel.vue'
-import WebGPUWarning from './ui/components/WebGPUWarning.vue'
-import './ui/styles/app.css'
 
 const {
   selectedTextures,

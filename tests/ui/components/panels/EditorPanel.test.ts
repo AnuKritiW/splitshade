@@ -1,6 +1,8 @@
 import { describe, it, expect, vi } from 'vitest'
+
 import EditorPanel from '@/ui/components/panels/EditorPanel.vue'
-import { mountWithGlobalStubs } from '../../utils/mountWithGlobalStubs'
+
+import { mountWithGlobalStubs } from '@tests/ui/utils/mountWithGlobalStubs'
 
 
 // custom mount function for EditorPanel that provides stubbed Naive UI components

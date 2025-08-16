@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+
 import { getWebGPUDevice, configureCanvasContext } from '@/core/context'
 
 function mockNavigatorGpu(mockGpu: Partial<GPU> | undefined) {

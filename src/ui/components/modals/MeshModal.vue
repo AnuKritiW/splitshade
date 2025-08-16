@@ -10,9 +10,9 @@
  */
 -->
 <script setup lang="ts">
-import { computed, nextTick, watch } from 'vue'
-import { NModal, NCard, NSpace, NButton, NIcon, NUpload } from 'naive-ui'
 import { DownloadOutline } from '@vicons/ionicons5'
+import { NModal, NCard, NSpace, NButton, NIcon, NUpload } from 'naive-ui'
+import { computed, nextTick, watch } from 'vue'
 
 /**
  * Component props interface.

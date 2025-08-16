@@ -11,11 +11,12 @@
  * Integrates with modal components for detailed resource selection.
  */
 
-import { computed, h } from 'vue'
-import { NIcon } from 'naive-ui'
 import { ClipboardOutline } from '@vicons/ionicons5'
-import TextureModal from '@/ui/components/modals/TextureModal.vue'
+import { NIcon } from 'naive-ui'
+import { computed, h } from 'vue'
+
 import MeshModal from '@/ui/components/modals/MeshModal.vue'
+import TextureModal from '@/ui/components/modals/TextureModal.vue'
 
 /** Type definition for shader texture channel identifiers */
 type ChannelKey = 'iChannel0' | 'iChannel1' | 'iChannel2' | 'iChannel3'

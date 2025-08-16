@@ -5,9 +5,10 @@
  * the root component. Sets up Naive UI component library and typography.
  */
 
-import { createApp } from 'vue'
-import App from './App.vue'
 import naive from 'naive-ui'
+import { createApp } from 'vue'
+
+import App from './App.vue'
 import '@fontsource/lato/400.css'
 
 /**

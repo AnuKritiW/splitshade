@@ -1,6 +1,6 @@
 import { mount, type MountingOptions, type VueWrapper } from '@vue/test-utils'
-import type { Component, ComponentPublicInstance } from 'vue'
 import { vi } from 'vitest'
+import type { Component, ComponentPublicInstance } from 'vue'
 
 // Default stub config to avoid warnings for external components during testing
 const defaultGlobalStubs = {

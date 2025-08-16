@@ -1,8 +1,9 @@
-import { defineConfig } from 'vitest/config'
-import vue from '@vitejs/plugin-vue'
 import path from 'path'
-import { fileURLToPath } from 'url'
 import { dirname } from 'path'
+import { fileURLToPath } from 'url'
+
+import vue from '@vitejs/plugin-vue'
+import { defineConfig } from 'vitest/config'
 
 // Patch __dirname for ESM
 const __filename = fileURLToPath(import.meta.url)
@@ -17,7 +18,8 @@ export default defineConfig({
   plugins: [vue()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src') // maps @/ to /src
+      '@': path.resolve(__dirname, 'src'),        // maps @/ to /src
+      '@tests': path.resolve(__dirname, 'tests')  // maps @tests to /tests
     }
   },
   test: {

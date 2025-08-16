@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { mountWithGlobalStubs } from '../../utils/mountWithGlobalStubs'
+
 import ConsolePanel from '@/ui/components/panels/ConsolePanel.vue'
+
+import { mountWithGlobalStubs } from '@tests/ui/utils/mountWithGlobalStubs'
+
 
 describe('ConsolePanel.vue', () => {
   it('displays consoleOutput correctly', async () => {

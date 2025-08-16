@@ -1,5 +1,7 @@
-import { useMesh } from '@/ui/composables/useMesh'
 import { vi } from 'vitest'
+
+import { useMesh } from '@/ui/composables/useMesh'
+
 import { waitFor } from '@testing-library/vue'
 
 // mock parseObjToVertices

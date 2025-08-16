@@ -5,7 +5,8 @@
     "types": ["@webgpu/types", "vitest/globals", "node"],
     "baseUrl": ".", // enables relative module resolution
     "paths": {
-      "@/*": ["src/*"] // defines alias
+      "@/*": ["src/*"], // defines alias
+      "@tests/*": ["tests/*"]
     },
 
     /* Linting */
