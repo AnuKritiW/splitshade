@@ -104,8 +104,8 @@ const showMeshModalProxy = computed({
     <TextureModal
       v-model:show="showTextureModalProxy"
       :allTextures="allTextures"
-      @selectTexture="img => emit('selectTexture', img)"
-      @handleUpload="payload => emit('handleTextureUpload', payload)"
+      @selectTexture="(img: string) => emit('selectTexture', img)"
+      @handleUpload="(payload: { file: any; onFinish: () => void }) => emit('handleTextureUpload', payload)"
     />
 
     <MeshModal
