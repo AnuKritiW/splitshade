@@ -232,7 +232,8 @@ export async function initWebGPU(
     // Check if shader uses any textures for optimization
     const needsTextures = usesAnyTextures(shaderCode);
     // output(needsTextures ? 'Textures detected: allocating all 4 channels' : 'No textures detected: optimized allocation');
-    let fullShaderCode = (needsTextures ? injectedHeader : minimalHeader) + '\n' + shaderCode;
+    const headerUsed = needsTextures ? injectedHeader : minimalHeader;
+    let fullShaderCode = headerUsed + '\n' + shaderCode;
 
     let vertexEntry = "main";
     const fragmentEntry = parsedCode.entryPoints.fragment[0].name;
@@ -243,7 +244,7 @@ export async function initWebGPU(
 
     if (parsedCode.type === "vertex-fragment") {
       vertexEntry = parsedCode.entryPoints.vertex[0].name;
-      const compilationResult = await compileShaderModule(device, fullShaderCode);
+      const compilationResult = await compileShaderModule(device, fullShaderCode, headerUsed);
       if (!compilationResult.module) {
         if (onStructuredErrors) onStructuredErrors(compilationResult.errors);
         return;
@@ -263,7 +264,7 @@ export async function initWebGPU(
       }
       vertexModule = vertexResult.module;
 
-      const fragmentResult = await compileShaderModule(device, fullShaderCode);
+      const fragmentResult = await compileShaderModule(device, fullShaderCode, headerUsed);
       if (!fragmentResult.module) {
         if (onStructuredErrors) onStructuredErrors(fragmentResult.errors);
         return;

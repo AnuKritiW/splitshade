@@ -87,6 +87,7 @@ interface CompilationResult {
  *
  * @param device - WebGPU device instance
  * @param code - Complete WGSL shader source including headers
+ * @param headerUsed - The header that was prepended to user code (for line number adjustment)
  *
  * @returns Promise resolving to compilation result with module and errors
  *
@@ -96,15 +97,15 @@ interface CompilationResult {
  * - Returns null module if compilation fails with errors
  * - Logs comprehensive compilation messages to console for development
  */
-export async function compileShaderModule(device: GPUDevice, code: string): Promise<CompilationResult> {
+export async function compileShaderModule(device: GPUDevice, code: string, headerUsed?: string): Promise<CompilationResult> {
   const module = device.createShaderModule({ code });
 
   // Get diagnostic info
   const info = await module.getCompilationInfo();
 
   // Calculate header offset to adjust line numbers for user code
-  const headerLines = code.split('\n').findIndex(line => line.trim().startsWith('@fragment') || line.trim().startsWith('@vertex') || line.trim().startsWith('fn '));
-  const headerOffset = headerLines > 0 ? headerLines : 0;
+  // If headerUsed is provided, count its lines plus the newline separator
+  const headerOffset = headerUsed ? headerUsed.split('\n').length : 0;
 
   const structuredErrors = info.messages.map(m => ({
     message: m.message,
