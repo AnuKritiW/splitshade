@@ -113,20 +113,37 @@ npm run deploy
 
 ```
 src/
-├── components/             # Vue components
-│   ├── EditorPanel.vue     # Monaco shader editor
-│   ├── PreviewPanel.vue    # WebGPU render canvas
-│   ├── ResourcesPanel.vue  # Mesh/texture selector
-│   └── ...
-├── webgpu/                 # WebGPU engine
-│   ├── renderer.ts         # Main renderer
-│   ├── pipeline.ts         # Render pipeline
-│   ├── shaders.ts          # Shader compilation
-│   └── ...
-├── composables/            # Vue composables
-├── shaders/                # Example WGSL shaders
-├── utils/                  # Utility functions
-└── styles/                 # Global styles
+├── ui/                               # UI layer (Vue.js frontend)
+│   ├── components/                   # Vue components
+│   │   ├── panels/                   # Main application panels
+│   │   │   ├── EditorPanel.vue       # Monaco shader editor
+│   │   │   ├── PreviewPanel.vue      # WebGPU render canvas
+│   │   │   ├── ResourcesPanel.vue    # Mesh/texture selector
+│   │   │   └── ConsolePanel.vue      # Error/output display
+│   │   ├── modals/                   # Modal dialogs
+│   │   │   ├── TextureModal.vue      # Texture selection
+│   │   │   └── MeshModal.vue         # Mesh selection
+│   │   └── WebGPUWarning.vue         # Browser compatibility
+│   ├── composables/                  # Vue composition functions
+│   │   ├── useShaderRunner.ts        # Shader execution
+│   │   ├── useTextures.ts            # Texture management
+│   │   └── useMesh.ts                # Mesh handling
+│   └── styles/                       # UI styling
+│       └── app.css
+├── core/                             # Core WebGPU setup
+│   └── context.ts                    # Device/adapter management
+├── runtime/                          # Rendering execution
+│   └── renderer.ts                   # Main rendering engine
+├── pipeline/                         # Rendering pipeline
+│   ├── pipeline.ts                   # Render pipeline factory
+│   └── uniforms.ts                   # Uniform buffer management
+├── shader/                           # Shader processing
+│   ├── shaderUtils.ts                # Shader compilation & templates
+│   └── wgslReflect.ts                # WGSL parsing & reflection
+└── resources/                        # Asset management
+    ├── textures.ts                   # Texture loading & binding
+    └── mesh/
+        └── objParser.ts              # OBJ file parsing
 ```
 
 ## Links
