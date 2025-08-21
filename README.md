@@ -22,6 +22,8 @@ A powerful, interactive WebGPU shader playground built with Vue.js and TypeScrip
   </a>
 </div>
 
+### [Video Demo](https://youtu.be/8NvtgGNSu4Q)
+
 ## Features
 
 - **Real-time Shader Preview** - See your WGSL shaders render instantly
@@ -146,10 +148,22 @@ src/
         └── objParser.ts              # OBJ file parsing
 ```
 
-## Links
+## Links and Documents
 
 - [Live Demo](https://anukritiw.github.io/splitshade/)
+- [Video Demo](https://youtu.be/8NvtgGNSu4Q)
 - [Documentation](https://anukritiw.github.io/splitshade-docs/)
+- [Thesis](./assets/AnuKritiWadhwa_Thesis.pdf)
+
+## Declaration
+
+AI tools were used as a supplementary resource in the development of this project in the following ways:
+
+- Providing starter code patterns and boilerplate (e.g. UI scaffolding, setup).
+- Suggesting refactoring strategies and debugging approaches.
+- Assisting with documentation phrasing and technical explanations (e.g. PR descriptions, README, comments).
+
+All AI-assisted outputs were reviewed, adapted, and verified before inclusion.
 
 ---
 
