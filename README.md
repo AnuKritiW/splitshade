@@ -167,6 +167,14 @@ All AI-assisted outputs were reviewed, adapted, and verified before inclusion.
 
 ---
 
+## License
+
+Copyright © 2025 Anu Kriti Wadhwa.
+
+This project is licensed under the GNU GPL v3. See the LICENSE file for details.
+
+---
+
 <div align="center">
   Made with ❤️ by <a href="https://github.com/AnuKritiW">AnuKritiW</a>
 </div>
